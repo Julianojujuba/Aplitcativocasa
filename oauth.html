@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <title>Conectando ao Google…</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { margin:0; min-height:100vh; display:grid; place-items:center; background:#05080f;
+           color:#e8f4ff; font:15px/1.5 "Segoe UI", system-ui, sans-serif; text-align:center; padding:24px; }
+    p { color:#7d93ae; font-size:13px; }
+  </style>
+</head>
+<body>
+  <div>
+    <h1 style="font-size:16px;letter-spacing:.1em;text-transform:uppercase;color:#2ad4f0">Conectando…</h1>
+    <p id="recado">Pode fechar esta janela.</p>
+  </div>
+  <script>
+    // Página só de passagem: o Google devolve o token aqui, ela entrega para o
+    // app que abriu a janela e se fecha.
+    (function () {
+      var h = new URLSearchParams(location.hash.replace(/^#/, ''));
+      var q = new URLSearchParams(location.search);
+      var resposta = {
+        tipo: 'google-oauth',
+        access_token: h.get('access_token'),
+        expires_in: h.get('expires_in'),
+        state: h.get('state') || q.get('state'),
+        error: h.get('error') || q.get('error')
+      };
+      if (resposta.error) {
+        document.getElementById('recado').textContent =
+          resposta.error === 'access_denied'
+            ? 'Você cancelou a autorização. Pode fechar esta janela.'
+            : 'Não deu certo: ' + resposta.error;
+      }
+      try { if (window.opener) window.opener.postMessage(resposta, location.origin); } catch (e) {}
+      if (!resposta.error) setTimeout(function () { window.close(); }, 300);
+    })();
+  </script>
+</body>
+</html>

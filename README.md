@@ -84,28 +84,67 @@ jeito que está, é grátis para sempre.
 
 ## Vocês dois no mesmo app
 
-Cada celular guarda os próprios dados. Para deixar os dois iguais:
+Ligando a sincronização, os dois celulares mostram exatamente a mesma coisa:
+você paga uma conta e o aviso some no celular dela; ela põe um item na lista e
+ele aparece aqui. Continua sem custo (Supabase, plano gratuito).
 
-1. No celular que está mais atualizado: **Ajustes → Enviar backup**
-   (manda por WhatsApp, e-mail, o que for) ou **Baixar arquivo**.
-2. No outro celular: abra o app → **Ajustes** e escolha:
-   - **Juntar backup** — mantém o que já existe ali e acrescenta o que vier do
-     arquivo (bom para o dia a dia);
-   - **Restaurar backup** — apaga o que está no aparelho e deixa igual ao arquivo
-     (bom para começar do zero no segundo celular).
+**No primeiro celular:**
 
-Vale o mesmo para trocar de celular ou para guardar uma cópia de segurança.
-**Faça um backup de vez em quando** — se o navegador limpar os dados do site, o
-que estiver só ali se perde.
+1. **Ajustes → Criar minha conta** (e-mail e uma senha de pelo menos 6 letras).
+2. **Criar a nossa casa.**
+3. Aparece um **código de 8 letras**. Copie e mande para a outra pessoa.
+
+**No segundo celular:**
+
+1. **Ajustes → Criar minha conta** (com o e-mail *dela*, senha própria).
+2. **Tenho um código** → digite o código da casa.
+
+Pronto. Daí em diante o app atualiza sozinho: a cada 15 segundos com o app
+aberto, ao voltar para a tela e assim que a internet volta. Se mexer sem
+internet, fica guardado e sobe quando reconectar.
+
+O código da casa é a chave: **não passe para mais ninguém.**
+
+### Ainda existe o backup em arquivo
+
+**Ajustes → Baixar arquivo** continua ali, mas é outra coisa: uma cópia de
+segurança feita na mão, uma foto do momento. Serve para guardar fora do
+celular ou levar os dados para um aparelho novo. Não é ele que mantém os dois
+celulares em dia — isso é a sincronização.
+
+---
+
+## Trazer a agenda do Google
+
+Para não redigitar o que já está marcado lá. Dois caminhos, em
+**Ajustes → Trazer a agenda do Google**:
+
+**Sem configurar nada — arquivo .ics**
+No computador: Google Agenda → Configurações → "Importar e exportar" →
+Exportar. Baixa um .zip; descompacte e escolha o .ics no app. Ele entende
+compromissos de dia inteiro, com hora, com fuso e os que se repetem.
+
+**Conectado na conta**
+Traz os compromissos direto, sempre que você pedir. Exige criar uma
+credencial gratuita no Google uma única vez — o passo a passo está dentro do
+próprio app, em "Como conseguir esse ID".
+
+Importar duas vezes não duplica nada: o que já existe é atualizado.
 
 ---
 
 ## Privacidade
 
-- Nada sai do aparelho. Não existe servidor, conta, login nem coleta de dados.
-- O armazenamento usado é o `localStorage` do navegador, isolado por site.
-- Só existe uma saída de dados: quando **você** exporta o backup e escolhe para
-  onde mandar.
+**Com a sincronização desligada**, nada sai do aparelho: os dados ficam no
+`localStorage` do navegador e não existe servidor nenhum.
+
+**Com a sincronização ligada**, os dados da casa ficam num projeto Supabase
+que é **seu**, com uma regra no banco que só deixa cada casa enxergar as
+próprias informações. Ninguém além de quem tem o código da casa alcança nada.
+Não há analytics, rastreamento nem anúncio em lugar nenhum.
+
+A conexão com o Google Agenda é somente leitura e acontece direto entre o seu
+navegador e o Google — nenhuma senha passa pelo app.
 
 ---
 
@@ -136,11 +175,27 @@ js/
   store.js               dados: leitura, gravação, backup, migração
   financas.js            contas do mês: previsto, realizado, categorias, histórico
   notify.js              cálculo dos alertas e disparo das notificações
+  nuvem.js               sincronização entre os celulares (Supabase, por fetch)
+  googleagenda.js        importação do Google Agenda (conta ou arquivo .ics)
   ui.js                  modal, formulários, avisos, gráfico, blocos reaproveitados
   icones.js              ícones em SVG
   tema.js                tema claro/escuro
   views/                 uma tela por arquivo
+oauth.html               página de passagem da autorização do Google
 ```
+
+### Como a sincronização funciona
+
+No banco existe uma tabela só, `registros`, com `(casa_id, colecao, id)` e o
+item inteiro em JSON — assim um campo novo no app não pede migração. Cada
+linha carrega `atualizado_em`, carimbado pelo banco com `clock_timestamp()`
+(com `now()` um lote inteiro sairia com o mesmo instante e a busca paginada
+pularia registros).
+
+O aparelho manda o que mudou desde o último envio e busca o que passou a
+existir depois do último instante que ele conhece. Exclusões viajam como marca
+de removido — sem isso, apagar num celular não apagaria no outro. Quando dois
+mexem no mesmo item, vale o mais recente.
 
 ### Como os dados são guardados
 

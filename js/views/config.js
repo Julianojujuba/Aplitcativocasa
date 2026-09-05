@@ -9,6 +9,10 @@ import {
   estaConectado, usuarioAtual, entrar, cadastrar, sair, criarCasa, entrarNaCasa,
   sincronizar, iniciarSincronizacaoAutomatica
 } from '../nuvem.js';
+import {
+  conectarAoGoogle, listarAgendas, buscarEventos, interpretarICS,
+  importarEventos, enderecoDeRetorno
+} from '../googleagenda.js';
 
 export const titulo = 'Ajustes';
 export const chaveIcone = 'engrenagem';
@@ -169,6 +173,106 @@ async function acaoEntrarCasa(raiz) {
   }
 }
 
+function blocoGoogle(d) {
+  const clientId = d.config.googleClientId || '';
+  const ultima = d.config.ultimaImportacaoGoogle;
+  return `<section class="painel">
+    <div class="painel__topo"><h3>${icone('agenda', 17)} Trazer a agenda do Google</h3></div>
+    <p class="texto-suave">Para não precisar redigitar o que já está marcado lá.</p>
+
+    <div class="linha-info"><span>Jeito rápido, sem configurar nada</span></div>
+    <button class="botao botao--primario botao--largo" data-acao="google-ics">Importar arquivo .ics</button>
+    <small class="campo__dica">No computador, abra o Google Agenda → Configurações →
+      "Importar e exportar" → Exportar. Vem um .zip; descompacte e escolha aqui o arquivo .ics.</small>
+
+    <div class="linha-info"><span>Conectado na conta (traz sempre que você pedir)</span></div>
+    <div class="campo">
+      <label class="campo__rotulo" for="google-client">ID do cliente do Google</label>
+      <input id="google-client" type="text" class="entrada" data-config-valor="googleClientId"
+        value="${esc(clientId)}" placeholder="000000-abc.apps.googleusercontent.com">
+    </div>
+    <button class="botao botao--suave botao--largo" data-acao="google-conectar"
+      ${clientId ? '' : 'disabled'}>Conectar e importar do Google</button>
+    ${clientId ? '' : '<small class="campo__dica">Preencha o ID acima para liberar este botão.</small>'}
+
+    <details class="ajuda">
+      <summary>Como conseguir esse ID (uma vez só, de graça)</summary>
+      <ol class="lista-passos">
+        <li>Abra <strong>console.cloud.google.com</strong> e crie um projeto.</li>
+        <li>Em <strong>APIs e serviços → Biblioteca</strong>, ative a <strong>Google Calendar API</strong>.</li>
+        <li>Em <strong>Tela de permissão OAuth</strong>, escolha "Externo", preencha o nome e,
+          em "Usuários de teste", adicione o e-mail seu e o dela.</li>
+        <li>Em <strong>Credenciais → Criar credenciais → ID do cliente OAuth</strong>,
+          tipo <strong>Aplicativo da Web</strong>.</li>
+        <li>Em "Origens JavaScript autorizadas", coloque:<br><code>${esc(location.origin)}</code></li>
+        <li>Em "URIs de redirecionamento autorizados", coloque:<br><code>${esc(enderecoDeRetorno())}</code></li>
+        <li>Copie o ID gerado e cole no campo acima.</li>
+      </ol>
+      <small class="campo__dica">Como o app fica em "teste", o Google mostra um aviso de
+        app não verificado. É esperado: basta seguir em "Avançado". Só vocês dois têm acesso.</small>
+    </details>
+
+    ${ultima ? `<div class="linha-info"><span>Última importação</span>
+      <strong>${esc(ultima)}</strong></div>` : ''}
+  </section>`;
+}
+
+async function importarDoGoogle(raiz) {
+  const d = obter();
+  const clientId = (d.config.googleClientId || '').trim();
+  if (!clientId) { aviso('Preencha o ID do cliente do Google primeiro.', 'atencao'); return; }
+  try {
+    aviso('Abrindo a janela do Google…');
+    const token = await conectarAoGoogle(clientId);
+    const agendas = await listarAgendas(token);
+    if (!agendas.length) { aviso('Não encontrei nenhuma agenda sua.', 'atencao'); return; }
+
+    let escolhidas = agendas;
+    if (agendas.length > 1) {
+      const v = await abrirFormulario({
+        titulo: 'De qual agenda?',
+        campos: [{ nome: 'agenda', rotulo: 'Agenda', tipo: 'selecao',
+          opcoes: [{ valor: '*', texto: 'Todas' },
+                   ...agendas.map((a) => ({ valor: a.id, texto: a.nome }))] }],
+        valores: { agenda: '*' },
+        textoOk: 'Importar'
+      });
+      if (!v) return;
+      if (v.agenda !== '*') escolhidas = agendas.filter((a) => a.id === v.agenda);
+    }
+
+    const todos = [];
+    for (const a of escolhidas) todos.push(...await buscarEventos(token, a.id));
+    const r = importarEventos(todos);
+    alterar((dd) => { dd.config.ultimaImportacaoGoogle = fmtData(hojeISO()); });
+    aviso(`${r.novos} novos, ${r.atualizados} atualizados, ${r.ignorados} já estavam iguais.`);
+    render(raiz);
+  } catch (e) {
+    aviso(e.message, 'erro');
+  }
+}
+
+function importarICS(raiz) {
+  const entrada = document.createElement('input');
+  entrada.type = 'file';
+  entrada.accept = '.ics,text/calendar';
+  entrada.onchange = async () => {
+    const arquivo = entrada.files?.[0];
+    if (!arquivo) return;
+    try {
+      const lista = interpretarICS(await arquivo.text());
+      if (!lista.length) { aviso('Não achei compromissos nesse arquivo.', 'atencao'); return; }
+      const r = importarEventos(lista);
+      alterar((dd) => { dd.config.ultimaImportacaoGoogle = fmtData(hojeISO()); });
+      aviso(`${r.novos} novos, ${r.atualizados} atualizados, ${r.ignorados} já estavam iguais.`);
+      render(raiz);
+    } catch (e) {
+      aviso('Não consegui ler esse arquivo .ics.', 'erro');
+    }
+  };
+  entrada.click();
+}
+
 async function editarPessoa(id) {
   const d = obter();
   const p = d.pessoas.find((x) => x.id === id);
@@ -319,6 +423,8 @@ export function render(raiz) {
       `}
     </section>
 
+    ${blocoGoogle(d)}
+
     <section class="painel">
       <div class="painel__topo"><h3>${icone('paleta', 17)} Aparência</h3></div>
       <div class="opcoes-tema">
@@ -409,6 +515,8 @@ export function render(raiz) {
     const acao = e.target.closest('[data-acao]')?.dataset.acao;
     if (!acao) return;
 
+    if (acao === 'google-ics') { importarICS(raiz); return; }
+    if (acao === 'google-conectar') { importarDoGoogle(raiz); return; }
     if (acao === 'nuvem-entrar') { acaoConta('entrar', raiz); return; }
     if (acao === 'nuvem-cadastrar') { acaoConta('cadastrar', raiz); return; }
     if (acao === 'nuvem-criar-casa') { acaoCriarCasa(raiz); return; }

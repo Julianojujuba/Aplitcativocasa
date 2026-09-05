@@ -159,9 +159,11 @@ export function render(raiz) {
           ${t}${n ? ` <span class="filtro__num">${n}</span>` : ''}</button>`).join('')}
     </div>
     ${Object.keys(grupos).length === 0
-      ? vazio(icone('agenda', 40), 'Nada por aqui', filtro === 'proximos'
-          ? 'Sua agenda está livre. Que tal adicionar um compromisso?'
-          : 'Nenhum compromisso neste filtro.', { acao: 'novo', texto: '+ Novo compromisso' })
+      ? `${vazio(icone('agenda', 40), 'Nada por aqui', filtro === 'proximos'
+          ? 'Sua agenda está livre. Adicione um compromisso — ou traga os que já estão no Google.'
+          : 'Nenhum compromisso neste filtro.', { acao: 'novo', texto: '+ Novo compromisso' })}
+         ${filtro === 'proximos' ? `<div class="linha-botoes linha-botoes--largo">
+           <a class="botao botao--suave" href="#/config">Importar do Google Agenda</a></div>` : ''}`
       : Object.entries(grupos).map(([data, evs]) => `
         <section class="grupo-dia">
           <h3 class="grupo-dia__titulo ${data === hoje ? 'is-hoje' : ''}">

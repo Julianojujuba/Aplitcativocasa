@@ -969,3 +969,21 @@ input[type="date"].entrada, input[type="time"].entrada { color-scheme: inherit; 
 .linha-info:first-of-type { border-top: 0; }
 .linha-info span:first-child { color: var(--cor-texto-suave); }
 .linha-info strong { font-size: 12.5px; }
+
+/* Passo a passo que fica escondido até ser preciso */
+.ajuda { border: 1px solid var(--cor-borda); background: var(--cor-superficie-2); padding: 10px 12px; }
+.ajuda summary {
+  cursor: pointer; font-size: 11.5px; font-weight: 700; color: var(--cor-primaria);
+  text-transform: uppercase; letter-spacing: .08em; list-style: none;
+}
+.ajuda summary::-webkit-details-marker { display: none; }
+.ajuda summary::before { content: '▸ '; }
+.ajuda[open] summary::before { content: '▾ '; }
+.ajuda[open] summary { margin-bottom: 10px; }
+.ajuda ol { margin: 0 0 8px; }
+.ajuda code {
+  display: inline-block; margin-top: 3px; padding: 3px 7px; font-family: var(--mono); font-size: 11px;
+  background: var(--cor-primaria-fraca); color: var(--cor-primaria-forte);
+  border: 1px solid var(--cor-borda); overflow-wrap: anywhere;
+}
+.botao[disabled] { opacity: .4; cursor: not-allowed; box-shadow: none; }

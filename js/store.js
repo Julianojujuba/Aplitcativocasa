@@ -46,6 +46,8 @@ function estadoInicial() {
       horaResumoDiario: '08:00',
       resumoDiario: true,
       diasAvisoConta: 3,
+      googleClientId: '',
+      ultimaImportacaoGoogle: null,
       criadoEm: hojeISO()
     },
     notificados: {},   // dedupe: chave -> timestamp
