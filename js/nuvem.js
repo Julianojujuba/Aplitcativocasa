@@ -187,9 +187,17 @@ async function enviarMudancas() {
   const { casaId, ultimoPushEm = 0 } = d.nuvem;
   const linhas = [];
 
+  // A marca é de ANTES de juntar e enviar. Se fosse depois, o que a pessoa
+  // mexesse enquanto o envio acontece ficaria para trás dessa marca e nunca
+  // mais subiria — perda silenciosa de dados.
+  const marcaPush = Date.now();
+
   for (const colecao of colecoesSincronizadas()) {
     for (const item of (d[colecao] || [])) {
-      if ((item.atualizadoEm || item.criadoEm || 0) <= ultimoPushEm) continue;
+      // Sem carimbo nenhum (ex.: as duas pessoas que já vêm criadas) vale 1,
+      // e não 0: com 0 o item empataria com a marca inicial e nunca subiria.
+      const quando = item.atualizadoEm || item.criadoEm || 1;
+      if (quando <= ultimoPushEm) continue;
       linhas.push({ casa_id: casaId, colecao, id: item.id, dados: item, removido: false });
     }
   }
@@ -208,7 +216,7 @@ async function enviarMudancas() {
       cabecalhos: { Prefer: 'resolution=merge-duplicates,return=minimal' }
     });
   }
-  alterar((dd) => { dd.nuvem.ultimoPushEm = Date.now(); });
+  alterar((dd) => { dd.nuvem.ultimoPushEm = marcaPush; });
   return linhas.length;
 }
 

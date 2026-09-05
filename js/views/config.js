@@ -1,5 +1,5 @@
 // Ajustes: nomes do casal, tema, notificações, backup e sincronização por arquivo.
-import { obter, alterar, exportarJSON, importarJSON, apagarTudo } from '../store.js';
+import { obter, alterar, atualizar, exportarJSON, importarJSON, apagarTudo } from '../store.js';
 import { abrirFormulario, confirmar, aviso } from '../ui.js';
 import { esc, hojeISO, fmtData } from '../util.js';
 import { permissaoNotificacao, pedirPermissao, notificacaoDeTeste, tentarSyncPeriodico, verificarEDisparar } from '../notify.js';
@@ -290,10 +290,9 @@ async function editarPessoa(id) {
     valores: p
   });
   if (!v) return;
-  alterar((dados) => {
-    const i = dados.pessoas.findIndex((x) => x.id === id);
-    if (i >= 0) dados.pessoas[i] = { ...dados.pessoas[i], ...v };
-  });
+  // Passa por atualizar() e não por alterar() direto: é ele que carimba o
+  // atualizadoEm, sem o qual a troca de nome nunca chegaria no outro celular.
+  atualizar('pessoas', id, v);
   aviso('Nome atualizado.');
 }
 
