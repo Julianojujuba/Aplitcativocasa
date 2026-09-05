@@ -5,6 +5,7 @@
 
 :root {
   /* Tema escuro = padrão (o visual "de verdade" do app) */
+  --matiz: 189;               /* ciano do reator — trocável nos Ajustes */
   --fundo-0: #05080f;
   --fundo-1: #070c16;
   --vidro: rgba(13, 22, 38, .66);
@@ -14,12 +15,15 @@
   --cor-superficie-2: var(--vidro-2);
   --cor-texto: #e8f4ff;
   --cor-texto-suave: #7d93ae;
-  --cor-borda: rgba(56, 189, 248, .16);
-  --cor-borda-forte: rgba(56, 189, 248, .42);
+  --cor-borda: hsl(var(--matiz) 85% 60% / .16);
+  --cor-borda-forte: hsl(var(--matiz) 85% 60% / .42);
 
-  --cor-primaria: #2ad4f0;
-  --cor-primaria-forte: #67e8f9;
-  --cor-primaria-fraca: rgba(42, 212, 240, .12);
+  --cor-primaria: hsl(var(--matiz) 85% 55%);
+  --cor-primaria-forte: hsl(var(--matiz) 90% 69%);
+  --cor-primaria-fraca: hsl(var(--matiz) 85% 55% / .12);
+  --cor-primaria-escura: hsl(var(--matiz) 80% 36%);
+  --cor-primaria-clara: hsl(var(--matiz) 100% 87%);
+  --sobre-primaria: hsl(var(--matiz) 85% 7%);
   --cor-ouro: #ffb224;
   --cor-ouro-fraca: rgba(255, 178, 36, .13);
   --cor-ok: #26e5a4;
@@ -29,8 +33,8 @@
   --cor-atencao: var(--cor-ouro);
   --cor-atencao-fraca: var(--cor-ouro-fraca);
 
-  --brilho: 0 0 18px rgba(42, 212, 240, .35);
-  --brilho-forte: 0 0 28px rgba(42, 212, 240, .55);
+  --brilho: 0 0 18px hsl(var(--matiz) 90% 60% / .35);
+  --brilho-forte: 0 0 28px hsl(var(--matiz) 90% 60% / .55);
   --brilho-ouro: 0 0 18px rgba(255, 178, 36, .4);
   --sombra: 0 1px 0 rgba(255, 255, 255, .04) inset, 0 8px 28px rgba(0, 0, 0, .5);
   --sombra-forte: 0 24px 64px rgba(0, 0, 0, .7);
@@ -53,19 +57,22 @@
   --vidro-2: rgba(226, 236, 248, .8);
   --cor-texto: #0a1a2b;
   --cor-texto-suave: #5a7086;
-  --cor-borda: rgba(8, 128, 168, .2);
-  --cor-borda-forte: rgba(8, 128, 168, .5);
-  --cor-primaria: #0891b2;
-  --cor-primaria-forte: #0e7490;
-  --cor-primaria-fraca: rgba(8, 145, 178, .11);
+  --cor-borda: hsl(var(--matiz) 70% 40% / .22);
+  --cor-borda-forte: hsl(var(--matiz) 70% 40% / .5);
+  --cor-primaria: hsl(var(--matiz) 85% 36%);
+  --cor-primaria-forte: hsl(var(--matiz) 85% 27%);
+  --cor-primaria-fraca: hsl(var(--matiz) 85% 40% / .11);
+  --cor-primaria-escura: hsl(var(--matiz) 85% 26%);
+  --cor-primaria-clara: hsl(var(--matiz) 90% 55%);
+  --sobre-primaria: #ffffff;
   --cor-ouro: #c07806;
   --cor-ouro-fraca: rgba(192, 120, 6, .12);
   --cor-ok: #059669;
   --cor-ok-fraca: rgba(5, 150, 105, .12);
   --cor-perigo: #dc2626;
   --cor-perigo-fraca: rgba(220, 38, 38, .1);
-  --brilho: 0 0 14px rgba(8, 145, 178, .25);
-  --brilho-forte: 0 0 22px rgba(8, 145, 178, .38);
+  --brilho: 0 0 14px hsl(var(--matiz) 85% 40% / .25);
+  --brilho-forte: 0 0 22px hsl(var(--matiz) 85% 40% / .38);
   --brilho-ouro: 0 0 14px rgba(192, 120, 6, .3);
   --sombra: 0 2px 12px rgba(10, 30, 60, .1);
   --sombra-forte: 0 20px 50px rgba(10, 30, 60, .25);
@@ -77,14 +84,17 @@
     --fundo-0: #eef3fa; --fundo-1: #e2eaf5;
     --vidro: rgba(255, 255, 255, .82); --vidro-2: rgba(226, 236, 248, .8);
     --cor-texto: #0a1a2b; --cor-texto-suave: #5a7086;
-    --cor-borda: rgba(8, 128, 168, .2); --cor-borda-forte: rgba(8, 128, 168, .5);
-    --cor-primaria: #0891b2; --cor-primaria-forte: #0e7490;
-    --cor-primaria-fraca: rgba(8, 145, 178, .11);
+    --cor-borda: hsl(var(--matiz) 70% 40% / .22); --cor-borda-forte: hsl(var(--matiz) 70% 40% / .5);
+    --cor-primaria: hsl(var(--matiz) 85% 36%); --cor-primaria-forte: hsl(var(--matiz) 85% 27%);
+    --cor-primaria-fraca: hsl(var(--matiz) 85% 40% / .11);
+    --cor-primaria-escura: hsl(var(--matiz) 85% 26%);
+    --cor-primaria-clara: hsl(var(--matiz) 90% 55%);
+    --sobre-primaria: #ffffff;
     --cor-ouro: #c07806; --cor-ouro-fraca: rgba(192, 120, 6, .12);
     --cor-ok: #059669; --cor-ok-fraca: rgba(5, 150, 105, .12);
     --cor-perigo: #dc2626; --cor-perigo-fraca: rgba(220, 38, 38, .1);
-    --brilho: 0 0 14px rgba(8, 145, 178, .25);
-    --brilho-forte: 0 0 22px rgba(8, 145, 178, .38);
+    --brilho: 0 0 14px hsl(var(--matiz) 85% 40% / .25);
+    --brilho-forte: 0 0 22px hsl(var(--matiz) 85% 40% / .38);
     --brilho-ouro: 0 0 14px rgba(192, 120, 6, .3);
     --sombra: 0 2px 12px rgba(10, 30, 60, .1);
     --sombra-forte: 0 20px 50px rgba(10, 30, 60, .25);
@@ -110,16 +120,16 @@ body {
 body::before {
   content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none;
   background:
-    radial-gradient(1000px 620px at 50% -12%, rgba(42, 212, 240, .16), transparent 62%),
+    radial-gradient(1000px 620px at 50% -12%, hsl(var(--matiz) 90% 55% / .16), transparent 62%),
     radial-gradient(760px 520px at 108% 106%, rgba(255, 178, 36, .12), transparent 60%),
-    radial-gradient(700px 500px at -12% 88%, rgba(42, 212, 240, .09), transparent 60%),
+    radial-gradient(700px 500px at -12% 88%, hsl(var(--matiz) 90% 55% / .09), transparent 60%),
     linear-gradient(180deg, var(--fundo-1), var(--fundo-0));
 }
 body::after {
   content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: .5;
   background-image:
-    linear-gradient(to right, rgba(120, 190, 220, .055) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(120, 190, 220, .055) 1px, transparent 1px);
+    linear-gradient(to right, hsl(var(--matiz) 45% 68% / .055) 1px, transparent 1px),
+    linear-gradient(to bottom, hsl(var(--matiz) 45% 68% / .055) 1px, transparent 1px);
   background-size: 46px 46px;
   mask-image: radial-gradient(circle at 50% 34%, #000 0%, transparent 78%);
   -webkit-mask-image: radial-gradient(circle at 50% 34%, #000 0%, transparent 78%);
@@ -152,7 +162,7 @@ img { max-width: 100%; }
 .faixa {
   display: flex; align-items: center; gap: 10px; justify-content: space-between;
   padding: calc(10px + var(--seguro-cima)) 14px 10px;
-  background: linear-gradient(100deg, rgba(42, 212, 240, .22), rgba(255, 178, 36, .18));
+  background: linear-gradient(100deg, hsl(var(--matiz) 90% 55% / .22), rgba(255, 178, 36, .18));
   border-bottom: 1px solid var(--cor-borda-forte);
   color: var(--cor-texto); font-size: 13px; line-height: 1.35;
   backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
@@ -175,7 +185,7 @@ img { max-width: 100%; }
 /* Varredura luminosa passando pelo cabeçalho */
 .cabecalho::after {
   content: ''; position: absolute; inset: 0; pointer-events: none;
-  background: linear-gradient(100deg, transparent 30%, rgba(42, 212, 240, .16) 50%, transparent 70%);
+  background: linear-gradient(100deg, transparent 30%, hsl(var(--matiz) 90% 55% / .16) 50%, transparent 70%);
   transform: translateX(-100%);
   animation: varredura 9s ease-in-out infinite;
 }
@@ -189,7 +199,11 @@ img { max-width: 100%; }
   position: relative; width: 34px; height: 34px; flex-shrink: 0;
   display: grid; place-items: center;
 }
-.marca-reator img { width: 30px; height: 30px; border-radius: 6px; position: relative; z-index: 1; }
+.marca-reator img {
+  width: 30px; height: 30px; border-radius: 6px; position: relative; z-index: 1;
+  /* o ícone é um PNG ciano fixo; gira junto com a cor escolhida */
+  filter: hue-rotate(calc((var(--matiz) - 189) * 1deg));
+}
 .marca-reator::before {
   content: ''; position: absolute; inset: -3px; border-radius: 50%;
   border: 1px solid var(--cor-borda-forte);
@@ -335,8 +349,8 @@ img { max-width: 100%; }
 }
 .botao:active { transform: scale(.97); }
 .botao--primario {
-  background: linear-gradient(120deg, var(--cor-primaria), #1aa5c4);
-  color: #04121a; box-shadow: var(--brilho);
+  background: linear-gradient(120deg, var(--cor-primaria), var(--cor-primaria-escura));
+  color: var(--sobre-primaria); box-shadow: var(--brilho);
 }
 .botao--primario:hover { box-shadow: var(--brilho-forte); }
 .botao--suave {
@@ -363,15 +377,15 @@ img { max-width: 100%; }
   position: fixed; right: 16px; z-index: 15;
   bottom: calc(var(--altura-menu) + var(--seguro-baixo) + 16px);
   width: 56px; height: 56px; border: 1px solid var(--cor-primaria-forte); border-radius: 50%;
-  background: radial-gradient(circle at 50% 40%, #7ff0ff, var(--cor-primaria) 45%, #0b7f99 100%);
-  color: #04121a; font-size: 28px; font-weight: 300; line-height: 1;
+  background: radial-gradient(circle at 50% 40%, var(--cor-primaria-clara), var(--cor-primaria) 45%, var(--cor-primaria-escura) 100%);
+  color: var(--sobre-primaria); font-size: 28px; font-weight: 300; line-height: 1;
   box-shadow: var(--brilho-forte), 0 12px 30px rgba(0, 0, 0, .6);
   cursor: pointer; transition: transform .14s, box-shadow .2s;
 }
 .botao-flutuante:active { transform: scale(.92); }
 .botao-flutuante::after {
   content: ''; position: absolute; inset: -5px; border-radius: 50%;
-  border: 1px solid rgba(42, 212, 240, .45); animation: pulso-reator 3s ease-in-out infinite;
+  border: 1px solid hsl(var(--matiz) 90% 60% / .45); animation: pulso-reator 3s ease-in-out infinite;
 }
 
 .linha-botoes { display: flex; gap: 8px; justify-content: flex-end; }
@@ -431,7 +445,7 @@ img { max-width: 100%; }
 .item__check {
   flex-shrink: 0; width: 25px; height: 25px; margin-top: 1px; padding: 0;
   border: 1.5px solid var(--cor-item, var(--cor-borda-forte)); border-radius: 50%;
-  background: transparent; color: #04121a; font-size: 13px; font-weight: 700; line-height: 1;
+  background: transparent; color: var(--sobre-primaria); font-size: 13px; font-weight: 700; line-height: 1;
   cursor: pointer; transition: background .18s, box-shadow .18s, border-color .18s;
 }
 .item__check:hover { box-shadow: var(--brilho); }
@@ -559,7 +573,7 @@ img { max-width: 100%; }
   border: 1px solid var(--cor-borda);
 }
 .progresso__preenchido { height: 100%; transition: width .5s cubic-bezier(.4, 0, .2, 1); }
-.progresso__preenchido--primario { background: linear-gradient(90deg, #0e7f99, var(--cor-primaria)); box-shadow: var(--brilho); }
+.progresso__preenchido--primario { background: linear-gradient(90deg, var(--cor-primaria-escura), var(--cor-primaria)); box-shadow: var(--brilho); }
 .progresso__preenchido--ok { background: linear-gradient(90deg, #12a67c, var(--cor-ok)); box-shadow: 0 0 14px rgba(38, 229, 164, .55); }
 .progresso__preenchido--perigo { background: linear-gradient(90deg, #b52340, var(--cor-perigo)); box-shadow: 0 0 14px rgba(255, 77, 106, .55); }
 .progresso__preenchido--atencao { background: linear-gradient(90deg, #b87908, var(--cor-ouro)); box-shadow: var(--brilho-ouro); }
@@ -793,7 +807,7 @@ img { max-width: 100%; }
 }
 :root[data-tema="claro"] .entrada { background: rgba(255, 255, 255, .9); }
 .entrada:focus {
-  outline: 0; border-color: var(--cor-primaria); background: rgba(42, 212, 240, .06);
+  outline: 0; border-color: var(--cor-primaria); background: hsl(var(--matiz) 90% 55% / .06);
   box-shadow: var(--brilho);
 }
 .entrada::placeholder { color: var(--cor-texto-suave); opacity: .65; }
@@ -987,3 +1001,92 @@ input[type="date"].entrada, input[type="time"].entrada { color-scheme: inherit; 
   border: 1px solid var(--cor-borda); overflow-wrap: anywhere;
 }
 .botao[disabled] { opacity: .4; cursor: not-allowed; box-shadow: none; }
+
+/* ==========================================================================
+   O ajudante da casa
+   ========================================================================== */
+
+.mascote {
+  position: fixed; z-index: 18; left: 10px;
+  bottom: calc(var(--altura-menu) + var(--seguro-baixo) + 10px);
+  display: flex; flex-direction: column; align-items: flex-start; gap: 6px;
+  pointer-events: none;
+}
+
+.mascote__botao {
+  pointer-events: auto; border: 0; padding: 0; background: none; cursor: pointer;
+  color: var(--cor-primaria); line-height: 0;
+  filter: drop-shadow(0 0 10px hsl(var(--matiz) 90% 55% / .45));
+  animation: mascote-flutua 4.2s ease-in-out infinite;
+}
+.mascote__botao:active { transform: scale(.92); }
+
+@keyframes mascote-flutua {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+/* Pisca de vez em quando, para parecer vivo */
+.mascote__olhos { animation: mascote-pisca 5.5s infinite; transform-origin: center; }
+@keyframes mascote-pisca {
+  0%, 92%, 100% { transform: scaleY(1); }
+  95% { transform: scaleY(.12); }
+}
+
+.mascote__luz { animation: mascote-luz 2.6s ease-in-out infinite; }
+@keyframes mascote-luz {
+  0%, 100% { opacity: .35; }
+  50% { opacity: 1; }
+}
+
+.mascote__reator { animation: mascote-reator 3.4s linear infinite; transform-origin: 32px 52px; }
+@keyframes mascote-reator {
+  0% { transform: rotate(0); opacity: .5; }
+  50% { opacity: 1; }
+  100% { transform: rotate(360deg); opacity: .5; }
+}
+
+.mascote__corpo.is-feliz { animation: mascote-comemora .7s cubic-bezier(.3, 1.4, .5, 1); }
+@keyframes mascote-comemora {
+  0% { transform: translateY(0) scale(1); }
+  35% { transform: translateY(-11px) scale(1.12) rotate(-7deg); }
+  65% { transform: translateY(0) scale(.96) rotate(5deg); }
+  100% { transform: translateY(0) scale(1) rotate(0); }
+}
+
+.mascote__balao {
+  --corte: 8px;
+  max-width: min(62vw, 250px); padding: 9px 12px;
+  background: var(--cor-superficie); border: 1px solid var(--cor-borda-forte);
+  color: var(--cor-texto); font-size: 12.5px; line-height: 1.35;
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  box-shadow: var(--sombra), var(--brilho);
+  clip-path: polygon(var(--corte) 0, 100% 0, 100% calc(100% - var(--corte)), calc(100% - var(--corte)) 100%, 0 100%, 0 var(--corte));
+  opacity: 0; transform: translateY(6px) scale(.94); transform-origin: bottom left;
+  transition: opacity .24s, transform .24s;
+}
+.mascote__balao.is-visivel { opacity: 1; transform: translateY(0) scale(1); }
+
+/* Em tela grande o menu sai de baixo, então o ajudante desce junto */
+@media (min-width: 900px) {
+  .mascote { bottom: 24px; left: max(16px, calc(50vw - 470px - 70px)); }
+}
+
+/* Seletor de cor do app */
+.paletas { display: flex; flex-wrap: wrap; gap: 8px; }
+.paleta {
+  width: 38px; height: 38px; padding: 0; cursor: pointer; border-radius: 50%;
+  border: 2px solid transparent; background: hsl(var(--tom) 85% 55%);
+  box-shadow: 0 0 12px hsl(var(--tom) 90% 55% / .5);
+  transition: transform .15s, border-color .15s;
+}
+.paleta:active { transform: scale(.9); }
+.paleta.is-ativa { border-color: var(--cor-texto); transform: scale(1.12); }
+.paleta--livre {
+  position: relative; overflow: hidden;
+  background: conic-gradient(from 0deg, #ff4d6a, #ffb224, #26e5a4, #2ad4f0, #7c5cff, #ff4d6a);
+  box-shadow: none;
+}
+.paleta--livre input {
+  position: absolute; inset: -20%; width: 140%; height: 140%; opacity: 0; cursor: pointer; border: 0;
+}

@@ -1,6 +1,6 @@
 // Agenda: compromissos da casa, com lembrete e repetição.
 import { obter, inserir, atualizar, remover, buscar, nomePessoa, corPessoa, CATEGORIAS_EVENTO } from '../store.js';
-import { abrirFormulario, confirmar, aviso, vazio, etiqueta } from '../ui.js';
+import { abrirFormulario, confirmar, aviso, vazio, etiqueta, sinalizar } from '../ui.js';
 import { icone } from '../icones.js';
 import { esc, hojeISO, fmtData, fmtDataExtenso, isoParaData, diasEntre, dataParaISO, DIAS_SEMANA_LONGO } from '../util.js';
 
@@ -54,6 +54,7 @@ async function novoEvento(dataSugerida) {
   if (!v) return;
   inserir('eventos', { ...v, lembreteMin: Number(v.lembreteMin), concluido: false });
   aviso('Compromisso adicionado à agenda.');
+  sinalizar('evento');
 }
 
 async function editarEvento(id) {
@@ -95,6 +96,7 @@ function concluir(id) {
   } else {
     aviso('Compromisso concluído.');
   }
+  sinalizar('feito');
 }
 
 function rotuloDia(iso) {

@@ -1,6 +1,6 @@
 // Mercado: lista de compras compartilhada, com preço estimado e histórico.
 import { obter, inserir, atualizar, remover, buscar, alterar, nomePessoa, CATEGORIAS_MERCADO } from '../store.js';
-import { abrirFormulario, confirmar, aviso, vazio } from '../ui.js';
+import { abrirFormulario, confirmar, aviso, vazio, sinalizar } from '../ui.js';
 import { icone } from '../icones.js';
 import { esc, fmtMoney, hojeISO, fmtData, competenciaDe, competenciaDoISO } from '../util.js';
 
@@ -42,6 +42,7 @@ function adicionarRapido(texto) {
     nome, quantidade: 1, unidade: 'un', categoria: 'Mercearia',
     precoEstimado: 0, comprado: false, recorrente: false
   });
+  sinalizar('mercado');
 }
 
 async function editarItem(id) {
@@ -103,6 +104,7 @@ async function finalizarCompra() {
   });
 
   aviso(`Compra de ${fmtMoney(v.total)} registrada.`);
+  sinalizar('compra');
 }
 
 function render_lista(d) {

@@ -3,7 +3,8 @@ import { obter, alterar, atualizar, exportarJSON, importarJSON, apagarTudo } fro
 import { abrirFormulario, confirmar, aviso } from '../ui.js';
 import { esc, hojeISO, fmtData } from '../util.js';
 import { permissaoNotificacao, pedirPermissao, notificacaoDeTeste, tentarSyncPeriodico, verificarEDisparar } from '../notify.js';
-import { aplicarTema } from '../tema.js';
+import { aplicarTema, aplicarCor, PALETAS, matizDoHex, hexDaMatiz, MATIZ_PADRAO } from '../tema.js';
+import { atualizarPresenca, reagir } from '../mascote.js';
 import { icone } from '../icones.js';
 import {
   estaConectado, usuarioAtual, entrar, cadastrar, sair, criarCasa, entrarNaCasa,
@@ -426,9 +427,35 @@ export function render(raiz) {
 
     <section class="painel">
       <div class="painel__topo"><h3>${icone('paleta', 17)} Aparência</h3></div>
-      <div class="opcoes-tema">
-        ${[['escuro', 'Reator'], ['claro', 'Claro'], ['auto', 'Sistema']].map(([v, t]) => `
-          <button class="opcao-tema ${d.config.tema === v ? 'is-ativa' : ''}" data-escolher-tema="${v}">${t}</button>`).join('')}
+
+      <div class="campo">
+        <span class="campo__rotulo">Claro ou escuro</span>
+        <div class="opcoes-tema">
+          ${[['escuro', 'Reator'], ['claro', 'Claro'], ['auto', 'Sistema']].map(([v, t]) => `
+            <button class="opcao-tema ${d.config.tema === v ? 'is-ativa' : ''}" data-escolher-tema="${v}">${t}</button>`).join('')}
+        </div>
+      </div>
+
+      <div class="campo">
+        <span class="campo__rotulo">Cor do app</span>
+        <div class="paletas">
+          ${PALETAS.map((pa) => `
+            <button class="paleta ${Number(d.config.matiz) === pa.matiz ? 'is-ativa' : ''}"
+              style="--tom:${pa.matiz}" data-matiz="${pa.matiz}"
+              title="${esc(pa.nome)}" aria-label="Cor ${esc(pa.nome)}"></button>`).join('')}
+          <span class="paleta paleta--livre" title="Escolher qualquer cor">
+            <input type="color" id="cor-livre" value="${esc(hexDaMatiz(d.config.matiz ?? MATIZ_PADRAO))}"
+              aria-label="Escolher qualquer cor">
+          </span>
+        </div>
+        <small class="campo__dica">Cada celular tem a sua — a sua cor não muda a dela.</small>
+      </div>
+
+      <div class="campo campo--switch">
+        <label class="switch"><input type="checkbox" data-config="mascote" ${d.config.mascote !== false ? 'checked' : ''}>
+          <span class="switch__pista"></span></label>
+        <div><span class="campo__rotulo">Ajudante da casa</span>
+          <small class="campo__dica">O robozinho no canto que comemora junto</small></div>
       </div>
     </section>
 
@@ -484,10 +511,23 @@ export function render(raiz) {
   if (botaoInstalar && window.promptInstalacao) botaoInstalar.hidden = false;
 
   raiz.onchange = (e) => {
+    const seletorCor = e.target.closest('#cor-livre');
+    if (seletorCor) {
+      const matiz = matizDoHex(seletorCor.value);
+      alterar((dados) => { dados.config.matiz = matiz; });
+      aplicarCor(matiz);
+      return;
+    }
+
     const alvo = e.target.closest('[data-config]');
     if (alvo) {
       alterar((dados) => { dados.config[alvo.dataset.config] = alvo.checked; });
-      if (alvo.checked) verificarEDisparar();
+      if (alvo.dataset.config === 'mascote') {
+        atualizarPresenca();
+        if (alvo.checked) setTimeout(() => reagir('ocioso'), 350);
+      } else if (alvo.checked) {
+        verificarEDisparar();
+      }
       return;
     }
     const valor = e.target.closest('[data-config-valor]');
@@ -503,6 +543,14 @@ export function render(raiz) {
   raiz.onclick = async (e) => {
     const p = e.target.closest('[data-pessoa]');
     if (p) { editarPessoa(p.dataset.pessoa); return; }
+
+    const cor = e.target.closest('[data-matiz]');
+    if (cor) {
+      const matiz = Number(cor.dataset.matiz);
+      alterar((dados) => { dados.config.matiz = matiz; });
+      aplicarCor(matiz);
+      return;
+    }
 
     const t = e.target.closest('[data-escolher-tema]');
     if (t) {

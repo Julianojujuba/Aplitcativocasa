@@ -1,6 +1,6 @@
 // Farmácia: remédios, horários das doses, controle de estoque e histórico.
 import { obter, inserir, atualizar, remover, buscar, nomePessoa, corPessoa, alterar } from '../store.js';
-import { abrirFormulario, confirmar, aviso, vazio, barraProgresso } from '../ui.js';
+import { abrirFormulario, confirmar, aviso, vazio, barraProgresso, sinalizar } from '../ui.js';
 import { icone } from '../icones.js';
 import { esc, hojeISO, fmtData, isoParaData, DIAS_SEMANA } from '../util.js';
 
@@ -87,6 +87,7 @@ function alternarDose(medId, data, hora) {
       if (novo <= minimo) aviso(`Estoque de ${med.nome} está acabando (${novo} ${med.unidade || 'un'}).`, 'atencao');
     }
     aviso('Dose registrada. ✓');
+    sinalizar('dose');
   }
 }
 

@@ -15,6 +15,7 @@ const ARQUIVOS = [
   './js/icones.js',
   './js/nuvem.js',
   './js/googleagenda.js',
+  './js/mascote.js',
   './oauth.html',
   './js/views/inicio.js',
   './js/views/agenda.js',

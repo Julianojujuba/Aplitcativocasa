@@ -17,6 +17,15 @@ export function aviso(texto, tipo = 'ok') {
   }, 3200);
 }
 
+// Avisa o ajudante da casa que algo bom aconteceu. Quando ele está ligado, o
+// balão dele já dá o recado — dois avisos ao mesmo tempo só poluem a tela.
+export function sinalizar(tipo) {
+  if (obter().config?.mascote !== false) {
+    document.getElementById('avisos')?.replaceChildren();
+  }
+  window.dispatchEvent(new CustomEvent('casa-acao', { detail: { tipo } }));
+}
+
 /* ---------- Modal base ---------- */
 
 function abrirModal({ titulo, corpo, rodape, aoFechar }) {

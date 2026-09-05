@@ -114,6 +114,23 @@ celulares em dia — isso é a sincronização.
 
 ---
 
+## Deixar com a sua cara
+
+Em **Ajustes → Aparência**:
+
+- **Claro ou escuro** — Reator (escuro, o padrão), Claro ou acompanhar o sistema.
+- **Cor do app** — sete cores prontas (ciano, azul, lilás, rosa, rubi, âmbar,
+  menta) ou qualquer outra pelo seletor do celular. A escolha repinta tudo:
+  botões, bordas, brilhos, gráficos, ícones e até o robozinho.
+- **Ajudante da casa** — o robô no canto que comemora junto quando você anota
+  um compromisso, toma o remédio ou paga uma conta. Pode desligar.
+
+**Cada celular tem a sua aparência.** Essas preferências não são
+sincronizadas: você pode deixar o seu num tom e ela no dela, olhando os mesmos
+dados. O que sincroniza é o conteúdo da casa, não o visual.
+
+---
+
 ## Trazer a agenda do Google
 
 Para não redigitar o que já está marcado lá. Dois caminhos, em
@@ -168,7 +185,7 @@ python3 -m http.server 8000
 index.html               casca do app (cabeçalho, menu, área de conteúdo)
 manifest.webmanifest     dados de instalação do app no celular
 sw.js                    service worker: funcionamento offline e cliques nas notificações
-css/styles.css           todo o visual (tema escuro padrão + tema claro)
+css/styles.css           todo o visual; a paleta inteira nasce da variável --matiz
 assets/icons/            ícones do app
 js/
   app.js                 navegação entre telas e inicialização
@@ -179,7 +196,8 @@ js/
   googleagenda.js        importação do Google Agenda (conta ou arquivo .ics)
   ui.js                  modal, formulários, avisos, gráfico, blocos reaproveitados
   icones.js              ícones em SVG
-  tema.js                tema claro/escuro
+  mascote.js             o ajudante que reage às ações
+  tema.js                tema claro/escuro e cor de destaque
   views/                 uma tela por arquivo
 oauth.html               página de passagem da autorização do Google
 ```

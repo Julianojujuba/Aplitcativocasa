@@ -1,6 +1,6 @@
 // Painel financeiro: salários, receitas, despesas avulsas, categorias e evolução.
 import { obter, inserir, atualizar, remover, buscar, marcarRecebido, desmarcarRecebido, nomePessoa, CATEGORIAS_DESPESA, CATEGORIAS_RECEITA } from '../store.js';
-import { abrirFormulario, confirmar, aviso, vazio, etiqueta, barraProgresso, cartaoNumero, graficoBarras } from '../ui.js';
+import { abrirFormulario, confirmar, aviso, vazio, etiqueta, barraProgresso, cartaoNumero, graficoBarras, sinalizar } from '../ui.js';
 import { icone } from '../icones.js';
 import { esc, fmtMoney, fmtDataCurta, hojeISO, competenciaDe, labelCompetencia, labelCompetenciaCurta, addMeses } from '../util.js';
 import { resumoMes, historico, statusOrcamento } from '../financas.js';
@@ -77,6 +77,7 @@ async function receber(id) {
   if (!v) return;
   marcarRecebido(id, comp, v);
   aviso('Recebimento registrado. ✓');
+  sinalizar('salario');
 }
 
 /* ---------- Transações avulsas ---------- */
@@ -98,6 +99,7 @@ async function novaTransacao(tipo) {
   if (!v) return;
   inserir('transacoes', { ...v, tipo, origem: 'manual' });
   aviso(tipo === 'receita' ? 'Receita lançada.' : 'Gasto lançado.');
+  sinalizar(tipo === 'receita' ? 'receita' : 'gasto');
 }
 
 async function definirOrcamento() {

@@ -1,6 +1,6 @@
 // Contas a pagar: fixas mensais e avulsas, com vencimento, baixa e histórico por mês.
 import { obter, inserir, atualizar, remover, buscar, marcarPago, desmarcarPago, nomePessoa, CATEGORIAS_DESPESA } from '../store.js';
-import { abrirFormulario, confirmar, aviso, vazio, etiqueta, barraProgresso, cartaoNumero } from '../ui.js';
+import { abrirFormulario, confirmar, aviso, vazio, etiqueta, barraProgresso, cartaoNumero, sinalizar } from '../ui.js';
 import { icone } from '../icones.js';
 import { esc, fmtMoney, fmtData, fmtDataCurta, hojeISO, competenciaDe, labelCompetencia, addMeses } from '../util.js';
 import { resumoMes } from '../financas.js';
@@ -83,6 +83,7 @@ async function pagar(id) {
   if (!v) return;
   marcarPago(id, comp, v);
   aviso(`${c.descricao} paga. ✓`);
+  sinalizar('conta');
 }
 
 const CORES_ESTADO = { paga: 'ok', atrasada: 'perigo', 'vence-hoje': 'atencao', proxima: 'atencao', aberta: 'neutro' };

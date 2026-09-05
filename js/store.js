@@ -46,6 +46,8 @@ function estadoInicial() {
       horaResumoDiario: '08:00',
       resumoDiario: true,
       diasAvisoConta: 3,
+      matiz: 189,
+      mascote: true,
       googleClientId: '',
       ultimaImportacaoGoogle: null,
       criadoEm: hojeISO()

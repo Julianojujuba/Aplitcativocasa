@@ -1,6 +1,7 @@
 // Ponto de entrada: navegação entre telas, service worker e ciclo de avisos.
 import { obter, inscrever } from './store.js';
-import { aplicarTema, observarTemaDoSistema } from './tema.js';
+import { aplicarTema, observarTemaDoSistema, aplicarCor } from './tema.js';
+import { montar as montarMascote } from './mascote.js';
 import { definirRegistroSW, iniciarMonitoramento, alertasParaExibir, verificarEDisparar,
   permissaoNotificacao, pedirPermissao, tentarSyncPeriodico } from './notify.js';
 import { aviso } from './ui.js';
@@ -113,7 +114,9 @@ function talvezPedirNotificacao() {
 
 function iniciar() {
   aplicarTema(obter().config.tema);
+  aplicarCor(obter().config.matiz);
   observarTemaDoSistema(() => obter().config.tema);
+  montarMascote();
   montarMenu();
   desenhar();
 
