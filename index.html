@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Nossa Casa</title>
+  <meta name="description" content="Agenda, farmácia, mercado e controle financeiro da casa — offline e sem custo.">
+  <meta name="theme-color" content="#05080f">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="assets/icons/favicon-32.png" sizes="32x32">
+  <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Nossa Casa">
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div id="faixa-notificacao" class="faixa" hidden>
+    <span>Quer ser avisado de contas, compromissos e remédios na hora certa?</span>
+    <div class="faixa__acoes">
+      <button class="botao botao--pequeno botao--claro" data-ativar>Ativar</button>
+      <button class="botao-icone botao-icone--claro" data-dispensar aria-label="Agora não">✕</button>
+    </div>
+  </div>
+
+  <header class="cabecalho">
+    <div class="cabecalho__marca">
+      <span class="marca-reator"><img src="assets/icons/icon-192.png" alt="" width="30" height="30"></span>
+      <div>
+        <strong>Nossa Casa</strong>
+        <span id="titulo-tela">Início</span>
+      </div>
+    </div>
+    <div class="cabecalho__acoes">
+      <button id="sino" class="botao-icone" aria-label="Avisos">
+        <svg class="icone" viewBox="0 0 24 24" width="21" height="21" aria-hidden="true" fill="none"
+          stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6.2 9.6a5.8 5.8 0 0 1 11.6 0c0 4.8 1.9 5.8 1.9 5.8H4.3s1.9-1 1.9-5.8Z"/>
+          <path d="M10.1 19.4a2 2 0 0 0 3.8 0"/>
+        </svg>
+        <span id="sino-contador" class="sino__contador" hidden>0</span>
+      </button>
+      <button id="botao-config" class="botao-icone" aria-label="Ajustes">
+        <svg class="icone" viewBox="0 0 24 24" width="21" height="21" aria-hidden="true" fill="none"
+          stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 7.2h4.6M13.4 7.2H20M4 16.8h6.6M15.4 16.8H20"/>
+          <circle cx="11" cy="7.2" r="2.4"/><circle cx="13" cy="16.8" r="2.4"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <main id="conteudo" class="conteudo"></main>
+
+  <nav id="menu" class="menu" aria-label="Navegação principal"></nav>
+
+  <div id="avisos" class="avisos" aria-live="polite"></div>
+
+  <noscript>
+    <p style="padding:24px;text-align:center">Este aplicativo precisa de JavaScript ativado para funcionar.</p>
+  </noscript>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
