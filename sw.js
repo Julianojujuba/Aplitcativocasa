@@ -13,6 +13,7 @@ const ARQUIVOS = [
   './js/financas.js',
   './js/tema.js',
   './js/icones.js',
+  './js/nuvem.js',
   './js/views/inicio.js',
   './js/views/agenda.js',
   './js/views/farmacia.js',

@@ -942,3 +942,30 @@ input[type="date"].entrada, input[type="time"].entrada { color-scheme: inherit; 
 .alerta__titulo .icone { color: var(--cor-perigo); flex-shrink: 0; }
 .alerta-texto { display: flex; align-items: center; gap: 6px; }
 .item__excluir .icone, .cartao__acoes .icone, .linha-categoria__x .icone { margin: 0 auto; }
+
+/* Selinho de sincronização no cabeçalho */
+.selo-nuvem {
+  width: 8px; height: 8px; border-radius: 50%; align-self: center; margin-right: 2px;
+  background: var(--cor-ok); box-shadow: 0 0 10px var(--cor-ok);
+  animation: pulso-selo 2.6s ease-in-out infinite;
+}
+.selo-nuvem.is-erro { background: var(--cor-perigo); box-shadow: 0 0 10px var(--cor-perigo); }
+@keyframes pulso-selo { 0%, 100% { opacity: .45; } 50% { opacity: 1; } }
+
+/* Código de convite da casa */
+.codigo-casa {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 12px 14px; border: 1px dashed var(--cor-borda-forte);
+  background: var(--cor-primaria-fraca);
+}
+.codigo-casa strong {
+  font-family: var(--mono); font-size: 21px; letter-spacing: .22em;
+  color: var(--cor-primaria-forte); text-shadow: var(--brilho);
+}
+.linha-info {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
+  font-size: 12.5px; padding: 5px 0; border-top: 1px solid var(--cor-borda);
+}
+.linha-info:first-of-type { border-top: 0; }
+.linha-info span:first-child { color: var(--cor-texto-suave); }
+.linha-info strong { font-size: 12.5px; }

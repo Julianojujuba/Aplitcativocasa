@@ -13,6 +13,15 @@ export const CATEGORIAS_EVENTO = ['Casa', 'Saúde', 'Trabalho', 'Família', 'Laz
 export const CATEGORIAS_MERCADO = ['Hortifruti', 'Carnes', 'Laticínios', 'Padaria', 'Mercearia',
   'Bebidas', 'Congelados', 'Limpeza', 'Higiene', 'Pet', 'Outros'];
 
+// O que é da casa (vai para os dois celulares) — o resto, como tema e
+// permissão de notificação, é de cada aparelho e fica só aqui.
+const COLECOES_SINCRONIZADAS = [
+  'pessoas', 'eventos', 'medicamentos', 'doses', 'mercado', 'compras',
+  'contas', 'pagamentos', 'rendas', 'recebimentos', 'transacoes', 'orcamentos'
+];
+
+export function colecoesSincronizadas() { return [...COLECOES_SINCRONIZADAS]; }
+
 function estadoInicial() {
   return {
     versao: VERSAO,
@@ -40,6 +49,11 @@ function estadoInicial() {
       criadoEm: hojeISO()
     },
     notificados: {},   // dedupe: chave -> timestamp
+    tumulos: [],       // o que foi apagado, para a exclusão chegar no outro celular
+    nuvem: {
+      casaId: null, codigo: null, nomeCasa: null,
+      ultimoPushEm: 0, ultimoSyncServidor: null, ultimoSyncEm: null, ultimoErro: null
+    },
     atualizadoEm: Date.now()
   };
 }
@@ -64,10 +78,10 @@ function migrar(dados) {
   const base = estadoInicial();
   const saida = { ...base, ...dados };
   saida.config = { ...base.config, ...(dados.config || {}) };
-  for (const chave of ['eventos', 'medicamentos', 'doses', 'mercado', 'compras', 'contas',
-    'pagamentos', 'rendas', 'recebimentos', 'transacoes', 'orcamentos', 'pessoas']) {
+  for (const chave of [...COLECOES_SINCRONIZADAS, 'tumulos']) {
     if (!Array.isArray(saida[chave])) saida[chave] = base[chave];
   }
+  saida.nuvem = { ...base.nuvem, ...(dados.nuvem || {}) };
   if (!saida.pessoas.length) saida.pessoas = base.pessoas;
   if (typeof saida.notificados !== 'object' || !saida.notificados) saida.notificados = {};
   saida.versao = VERSAO;
@@ -115,7 +129,8 @@ export function alterar(fn) {
 /* ---------- CRUD genérico ---------- */
 
 export function inserir(colecao, item) {
-  const registro = { id: uid(colecao.slice(0, 3)), criadoEm: Date.now(), ...item };
+  const agora = Date.now();
+  const registro = { id: uid(colecao.slice(0, 3)), criadoEm: agora, ...item, atualizadoEm: agora };
   alterar((d) => { d[colecao].unshift(registro); });
   return registro;
 }
@@ -123,12 +138,48 @@ export function inserir(colecao, item) {
 export function atualizar(colecao, id, campos) {
   alterar((d) => {
     const i = d[colecao].findIndex((x) => x.id === id);
-    if (i >= 0) d[colecao][i] = { ...d[colecao][i], ...campos };
+    if (i >= 0) d[colecao][i] = { ...d[colecao][i], ...campos, atualizadoEm: Date.now() };
   });
 }
 
 export function remover(colecao, id) {
-  alterar((d) => { d[colecao] = d[colecao].filter((x) => x.id !== id); });
+  alterar((d) => {
+    d[colecao] = d[colecao].filter((x) => x.id !== id);
+    if (COLECOES_SINCRONIZADAS.includes(colecao)) {
+      // Guarda a marca da exclusão para ela também acontecer no outro celular.
+      d.tumulos = d.tumulos.filter((t) => !(t.colecao === colecao && t.id === id));
+      d.tumulos.push({ colecao, id, em: Date.now() });
+      const limite = Date.now() - 60 * 86400000;
+      d.tumulos = d.tumulos.filter((t) => t.em > limite);
+    }
+  });
+}
+
+// Aplica de uma vez o que veio da nuvem, sem marcar como mudança local
+// (senão o app devolveria tudo de volta para o servidor sem parar).
+export function aplicarLoteDaNuvem(linhas) {
+  let mudou = false;
+  for (const linha of linhas) {
+    if (!COLECOES_SINCRONIZADAS.includes(linha.colecao)) continue;
+    const lista = estado[linha.colecao] || (estado[linha.colecao] = []);
+    const i = lista.findIndex((x) => x.id === linha.id);
+
+    if (linha.removido) {
+      if (i >= 0) { lista.splice(i, 1); mudou = true; }
+      estado.tumulos = estado.tumulos.filter((t) => !(t.colecao === linha.colecao && t.id === linha.id));
+      continue;
+    }
+    if (!linha.dados) continue;
+    // Não sobrescreve uma alteração daqui que ainda é mais nova.
+    const local = i >= 0 ? lista[i] : null;
+    if (local && (local.atualizadoEm || 0) > (linha.dados.atualizadoEm || 0)) continue;
+    if (i >= 0) lista[i] = linha.dados; else lista.unshift(linha.dados);
+    mudou = true;
+  }
+  if (!mudou) return 0;
+  salvarSilencioso();
+  window.dispatchEvent(new CustomEvent('dados-vieram-da-nuvem'));
+  return linhas.length;
 }
 
 export function buscar(colecao, id) {

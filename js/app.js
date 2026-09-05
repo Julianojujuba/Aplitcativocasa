@@ -5,6 +5,7 @@ import { definirRegistroSW, iniciarMonitoramento, alertasParaExibir, verificarED
   permissaoNotificacao, pedirPermissao, tentarSyncPeriodico } from './notify.js';
 import { aviso } from './ui.js';
 import { icone } from './icones.js';
+import { iniciarSincronizacaoAutomatica, sincronizarEmBreve, estaConectado } from './nuvem.js';
 
 import * as inicio from './views/inicio.js';
 import * as agenda from './views/agenda.js';
@@ -41,6 +42,18 @@ function atualizarMenu() {
     el.classList.toggle('is-ativo', el.dataset.tela === telaAtual);
     el.setAttribute('aria-current', el.dataset.tela === telaAtual ? 'page' : 'false');
   });
+}
+
+// Selinho no cabeçalho dizendo se os dois celulares estão ligados.
+function atualizarSelo() {
+  const selo = document.getElementById('selo-nuvem');
+  if (!selo) return;
+  const ligado = estaConectado();
+  selo.hidden = !ligado;
+  if (!ligado) return;
+  const erro = obter().nuvem?.ultimoErro;
+  selo.classList.toggle('is-erro', Boolean(erro));
+  selo.title = erro ? `Sincronização com problema: ${erro}` : 'Sincronizado com o outro celular';
 }
 
 function atualizarSino() {
@@ -106,11 +119,20 @@ function iniciar() {
 
   window.addEventListener('hashchange', desenhar);
 
-  // Redesenha a tela sempre que os dados mudarem.
+  // Redesenha a tela sempre que os dados mudarem — e manda para o outro celular.
   inscrever(() => {
     TELAS[telaAtual].render(conteudo);
     atualizarSino();
+    sincronizarEmBreve();
   });
+
+  // Chegou coisa do outro celular: só redesenha (não devolve para o servidor).
+  window.addEventListener('dados-vieram-da-nuvem', () => {
+    TELAS[telaAtual].render(conteudo);
+    atualizarSino();
+  });
+
+  window.addEventListener('nuvem-sincronizou', atualizarSelo);
 
   window.addEventListener('alertas-atualizados', atualizarSino);
 
@@ -119,6 +141,8 @@ function iniciar() {
 
   registrarSW();
   iniciarMonitoramento();
+  iniciarSincronizacaoAutomatica();
+  atualizarSelo();
   setTimeout(talvezPedirNotificacao, 1500);
 
   // Vira o dia? Redesenha para as datas ficarem certas.

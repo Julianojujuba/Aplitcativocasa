@@ -5,9 +5,169 @@ import { esc, hojeISO, fmtData } from '../util.js';
 import { permissaoNotificacao, pedirPermissao, notificacaoDeTeste, tentarSyncPeriodico, verificarEDisparar } from '../notify.js';
 import { aplicarTema } from '../tema.js';
 import { icone } from '../icones.js';
+import {
+  estaConectado, usuarioAtual, entrar, cadastrar, sair, criarCasa, entrarNaCasa,
+  sincronizar, iniciarSincronizacaoAutomatica
+} from '../nuvem.js';
 
 export const titulo = 'Ajustes';
 export const chaveIcone = 'engrenagem';
+
+function quandoFoi(ts) {
+  if (!ts) return 'ainda não';
+  const seg = Math.round((Date.now() - ts) / 1000);
+  if (seg < 60) return 'agora mesmo';
+  if (seg < 3600) return `há ${Math.round(seg / 60)} min`;
+  if (seg < 86400) return `há ${Math.round(seg / 3600)} h`;
+  return fmtData(new Date(ts).toISOString().slice(0, 10));
+}
+
+function blocoNuvem(d) {
+  const usuario = usuarioAtual();
+  const casa = d.nuvem || {};
+
+  if (!usuario) {
+    return `<section class="painel">
+      <div class="painel__topo"><h3>${icone('sincronizar', 17)} Os dois celulares juntos</h3></div>
+      <p class="texto-suave">Ligando a sincronização, o que um faz o outro vê: você paga uma conta e
+        o aviso some no celular dela; ela põe um item no mercado e ele aparece aqui. Continua de graça.</p>
+      <div class="linha-botoes linha-botoes--largo">
+        <button class="botao botao--primario" data-acao="nuvem-cadastrar">Criar minha conta</button>
+        <button class="botao botao--suave" data-acao="nuvem-entrar">Já tenho conta</button>
+      </div>
+      <small class="campo__dica">Sem a sincronização o app funciona normal — só que cada celular
+        com seus próprios dados.</small>
+    </section>`;
+  }
+
+  if (!casa.casaId) {
+    return `<section class="painel">
+      <div class="painel__topo"><h3>${icone('sincronizar', 17)} Os dois celulares juntos</h3>
+        <span class="etiqueta etiqueta--atencao">Falta a casa</span></div>
+      <p class="texto-suave">Você entrou como <strong>${esc(usuario.email)}</strong>.
+        Agora: se você é o primeiro dos dois, crie a casa e passe o código para ela.
+        Se ela já criou, use o código dela.</p>
+      <div class="linha-botoes linha-botoes--largo">
+        <button class="botao botao--primario" data-acao="nuvem-criar-casa">Criar a nossa casa</button>
+        <button class="botao botao--suave" data-acao="nuvem-entrar-casa">Tenho um código</button>
+      </div>
+      <button class="botao botao--suave botao--largo" data-acao="nuvem-sair">Sair da conta</button>
+    </section>`;
+  }
+
+  return `<section class="painel">
+    <div class="painel__topo"><h3>${icone('sincronizar', 17)} Os dois celulares juntos</h3>
+      <span class="etiqueta etiqueta--${casa.ultimoErro ? 'perigo' : 'ok'}">
+        ${casa.ultimoErro ? 'Com problema' : 'Ligado'}</span></div>
+
+    <p class="texto-suave">Tudo que vocês fazem aqui aparece no outro celular em alguns segundos.</p>
+
+    <div class="codigo-casa">
+      <div>
+        <small class="campo__dica">Código da casa</small>
+        <strong>${esc(casa.codigo || '')}</strong>
+      </div>
+      <button class="botao botao--suave botao--pequeno" data-acao="nuvem-copiar">Copiar</button>
+    </div>
+    <small class="campo__dica">Esse é o código que a outra pessoa usa em
+      "Tenho um código" no celular dela. Não passe para mais ninguém.</small>
+
+    <div class="linha-info"><span>Conta</span><strong>${esc(usuario.email)}</strong></div>
+    <div class="linha-info"><span>Última sincronização</span><strong>${quandoFoi(casa.ultimoSyncEm)}</strong></div>
+    ${casa.ultimoErro ? `<div class="linha-info"><span>Último erro</span>
+      <strong class="texto-perigo">${esc(casa.ultimoErro)}</strong></div>` : ''}
+
+    <div class="linha-botoes linha-botoes--largo">
+      <button class="botao botao--primario" data-acao="nuvem-sincronizar">Sincronizar agora</button>
+      <button class="botao botao--suave" data-acao="nuvem-sair">Desligar</button>
+    </div>
+  </section>`;
+}
+
+/* ---------------------------------------------------------------- ações da nuvem */
+
+async function formularioConta(modo) {
+  const v = await abrirFormulario({
+    titulo: modo === 'entrar' ? 'Entrar na conta' : 'Criar conta',
+    campos: [
+      { nome: 'email', rotulo: 'E-mail', tipo: 'texto', obrigatorio: true, placeholder: 'voce@email.com' },
+      { nome: 'senha', rotulo: 'Senha', tipo: 'texto', obrigatorio: true,
+        dica: modo === 'entrar' ? '' : 'Pelo menos 6 caracteres' }
+    ],
+    textoOk: modo === 'entrar' ? 'Entrar' : 'Criar',
+    aoValidar: (v) => {
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v.email)) return 'Confira o e-mail.';
+      if (modo !== 'entrar' && v.senha.length < 6) return 'A senha precisa de pelo menos 6 caracteres.';
+      return null;
+    }
+  });
+  return v;
+}
+
+async function acaoConta(modo, raiz) {
+  const v = await formularioConta(modo);
+  if (!v) return;
+  try {
+    if (modo === 'entrar') {
+      await entrar(v.email, v.senha);
+      aviso('Conta conectada.');
+    } else {
+      const r = await cadastrar(v.email, v.senha);
+      if (r.precisaConfirmarEmail) {
+        aviso('Enviei um e-mail de confirmação. Confirme e depois use "Já tenho conta".', 'atencao');
+        return;
+      }
+      aviso('Conta criada.');
+    }
+    iniciarSincronizacaoAutomatica();
+    render(raiz);
+  } catch (e) {
+    aviso(e.message, 'erro');
+  }
+}
+
+async function acaoCriarCasa(raiz) {
+  const v = await abrirFormulario({
+    titulo: 'Criar a nossa casa',
+    campos: [
+      { nome: 'nome', rotulo: 'Nome da casa', tipo: 'texto', placeholder: 'Ex.: Casa do Juliano' },
+      { nome: 'apelido', rotulo: 'Como você se chama aqui', tipo: 'texto', placeholder: 'Seu nome' }
+    ],
+    valores: { nome: 'Nossa Casa' },
+    textoOk: 'Criar'
+  });
+  if (!v) return;
+  try {
+    const casa = await criarCasa(v.nome, v.apelido);
+    iniciarSincronizacaoAutomatica();
+    await sincronizar();
+    render(raiz);
+    aviso(`Casa criada! O código é ${casa.codigo_convite}.`);
+  } catch (e) {
+    aviso(e.message, 'erro');
+  }
+}
+
+async function acaoEntrarCasa(raiz) {
+  const v = await abrirFormulario({
+    titulo: 'Entrar na casa',
+    campos: [
+      { nome: 'codigo', rotulo: 'Código da casa', tipo: 'texto', obrigatorio: true, placeholder: 'ABCD2345' },
+      { nome: 'apelido', rotulo: 'Como você se chama aqui', tipo: 'texto', placeholder: 'Seu nome' }
+    ],
+    textoOk: 'Entrar'
+  });
+  if (!v) return;
+  try {
+    await entrarNaCasa(v.codigo, v.apelido);
+    iniciarSincronizacaoAutomatica();
+    await sincronizar();
+    render(raiz);
+    aviso('Pronto! Os dois celulares agora mostram a mesma coisa.');
+  } catch (e) {
+    aviso(e.message, 'erro');
+  }
+}
 
 async function editarPessoa(id) {
   const d = obter();
@@ -107,6 +267,8 @@ export function render(raiz) {
     || window.navigator.standalone === true;
 
   raiz.innerHTML = `
+    ${blocoNuvem(d)}
+
     <section class="painel">
       <div class="painel__topo"><h3>${icone('pessoas', 17)} Quem mora aqui</h3></div>
       ${d.pessoas.map((p) => `
@@ -167,8 +329,9 @@ export function render(raiz) {
 
     <section class="painel">
       <div class="painel__topo"><h3>${icone('sincronizar', 17)} Backup e sincronização</h3></div>
-      <p class="texto-suave">Tudo fica salvo só no seu aparelho. Para passar os dados para o celular
-        da sua esposa (ou para não perder nada), exporte o arquivo e importe no outro aparelho.</p>
+      <p class="texto-suave">Uma cópia de segurança em arquivo, para guardar fora do celular.
+        <strong>Isto não é sincronização</strong> — é uma foto do momento, feita na mão.
+        Para os dois celulares andarem juntos sozinhos, use a sincronização lá em cima.</p>
       <div class="linha-botoes linha-botoes--largo">
         <button class="botao botao--primario" data-acao="compartilhar">Enviar backup</button>
         <button class="botao botao--suave" data-acao="baixar">Baixar arquivo</button>
@@ -245,6 +408,41 @@ export function render(raiz) {
 
     const acao = e.target.closest('[data-acao]')?.dataset.acao;
     if (!acao) return;
+
+    if (acao === 'nuvem-entrar') { acaoConta('entrar', raiz); return; }
+    if (acao === 'nuvem-cadastrar') { acaoConta('cadastrar', raiz); return; }
+    if (acao === 'nuvem-criar-casa') { acaoCriarCasa(raiz); return; }
+    if (acao === 'nuvem-entrar-casa') { acaoEntrarCasa(raiz); return; }
+    if (acao === 'nuvem-copiar') {
+      const codigo = obter().nuvem?.codigo || '';
+      try {
+        await navigator.clipboard.writeText(codigo);
+        aviso('Código copiado. Mande para ela.');
+      } catch {
+        aviso(`O código é ${codigo}`);
+      }
+      return;
+    }
+    if (acao === 'nuvem-sincronizar') {
+      try {
+        const r = await sincronizar({ silencioso: false });
+        aviso(r.ok ? `Tudo em dia (${r.enviados} enviados, ${r.recebidos} recebidos).`
+                   : 'Não consegui agora. Confira a internet.', r.ok ? 'ok' : 'atencao');
+      } catch (e) {
+        aviso(e.message, 'erro');
+      }
+      render(raiz);
+      return;
+    }
+    if (acao === 'nuvem-sair') {
+      const ok = await confirmar({
+        titulo: 'Desligar a sincronização',
+        mensagem: 'Este celular para de conversar com o outro. Os dados continuam aqui e no outro aparelho — nada é apagado. Continuar?',
+        textoOk: 'Desligar'
+      });
+      if (ok) { sair(); aviso('Sincronização desligada.'); render(raiz); }
+      return;
+    }
 
     if (acao === 'permitir') {
       const r = await pedirPermissao();
