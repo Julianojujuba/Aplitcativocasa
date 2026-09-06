@@ -176,6 +176,8 @@ export function aplicarLoteDaNuvem(linhas) {
       continue;
     }
     if (!linha.dados) continue;
+    // Fichas de pessoa antigas, sem dono, são lixo de versões anteriores.
+    if (linha.colecao === 'pessoas' && !linha.dados.dono) continue;
     // Não sobrescreve uma alteração daqui que ainda é mais nova.
     const local = i >= 0 ? lista[i] : null;
     if (local && (local.atualizadoEm || 0) > (linha.dados.atualizadoEm || 0)) continue;
@@ -193,6 +195,39 @@ export function buscar(colecao, id) {
 }
 
 /* ---------- Pessoas ---------- */
+
+/*
+  Cada pessoa pertence a uma conta (campo `dono`). As duas fichas que o app
+  cria sozinho ("Eu" e "Esposa") são só um rascunho local e nunca sobem: como
+  os dois celulares nasciam com as mesmas fichas p_1 e p_2, quem sincronizasse
+  por último apagava o nome do outro.
+*/
+export function idDaPessoaDe(usuarioId) {
+  return 'pes_' + String(usuarioId).replace(/-/g, '').slice(0, 12);
+}
+
+// Garante a ficha desta conta neste aparelho e a deixa como a dona dele.
+export function garantirPessoa(usuarioId, { nome, cor } = {}) {
+  if (!usuarioId) return null;
+  const id = idDaPessoaDe(usuarioId);
+  const existente = estado.pessoas.find((p) => p.id === id);
+  if (existente) {
+    const campos = {};
+    if (nome && nome !== existente.nome) campos.nome = nome;
+    if (cor && cor !== existente.cor) campos.cor = cor;
+    if (Object.keys(campos).length) atualizar('pessoas', id, campos);
+  } else {
+    inserir('pessoas', { id, dono: usuarioId, nome: nome || 'Eu', cor: cor || '#6366f1' });
+  }
+  if (estado.config.pessoaId !== id) alterar((d) => { d.config.pessoaId = id; });
+  return id;
+}
+
+// Quem realmente mora na casa. Sem ninguém ainda, mostra o rascunho local.
+export function pessoasVisiveis() {
+  const reais = estado.pessoas.filter((p) => p.dono);
+  return reais.length ? reais : estado.pessoas.filter((p) => !p.dono);
+}
 
 export function nomePessoa(id) {
   const p = estado.pessoas.find((x) => x.id === id);

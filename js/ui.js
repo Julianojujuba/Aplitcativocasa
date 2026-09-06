@@ -1,6 +1,6 @@
 // Componentes de interface reutilizados por todas as telas.
 import { esc, parseMoney, fmtMoney, DIAS_SEMANA } from './util.js';
-import { obter } from './store.js';
+import { obter, pessoasVisiveis } from './store.js';
 
 /* ---------- Avisos rápidos (toast) ---------- */
 
@@ -176,7 +176,7 @@ function renderCampo(c, valor) {
       break;
     }
     case 'pessoa': {
-      const ops = obter().pessoas.map((p) =>
+      const ops = pessoasVisiveis().map((p) =>
         `<option value="${esc(p.id)}" ${valor === p.id ? 'selected' : ''}>${esc(p.nome)}</option>`).join('');
       entrada = `<select id="${id}" class="entrada"><option value="">Casa (nós dois)</option>${ops}</select>`;
       break;

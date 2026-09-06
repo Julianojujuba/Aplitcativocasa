@@ -1,12 +1,12 @@
 // Ponto de entrada: navegação entre telas, service worker e ciclo de avisos.
-import { obter, inscrever } from './store.js';
+import { obter, inscrever, garantirPessoa } from './store.js';
 import { aplicarTema, observarTemaDoSistema, aplicarCor } from './tema.js';
 import { montar as montarMascote } from './mascote.js';
 import { definirRegistroSW, iniciarMonitoramento, alertasParaExibir, verificarEDisparar,
   permissaoNotificacao, pedirPermissao, tentarSyncPeriodico } from './notify.js';
 import { aviso } from './ui.js';
 import { icone } from './icones.js';
-import { iniciarSincronizacaoAutomatica, sincronizarEmBreve, estaConectado } from './nuvem.js';
+import { iniciarSincronizacaoAutomatica, sincronizarEmBreve, estaConectado, usuarioAtual } from './nuvem.js';
 
 import * as inicio from './views/inicio.js';
 import * as agenda from './views/agenda.js';
@@ -47,6 +47,18 @@ function atualizarMenu() {
 }
 
 // Selinho no cabeçalho dizendo se os dois celulares estão ligados.
+// Versões antigas usavam duas fichas fixas iguais nos dois celulares, e um
+// nome apagava o outro. Passa o nome já escolhido para a ficha da conta.
+function migrarPessoaDaConta() {
+  const usuario = usuarioAtual();
+  if (!usuario) return;
+  const d = obter();
+  const antiga = d.pessoas.find((p) => p.id === d.config.pessoaId);
+  const nome = antiga && !antiga.dono && !['Eu', 'Esposa'].includes(antiga.nome)
+    ? antiga.nome : undefined;
+  garantirPessoa(usuario.id, nome ? { nome, cor: antiga.cor } : {});
+}
+
 function atualizarSelo() {
   const selo = document.getElementById('selo-nuvem');
   if (!selo) return;
@@ -151,6 +163,7 @@ async function iniciar() {
     desenhar();
   }
 
+  migrarPessoaDaConta();
   iniciarMonitoramento();
   iniciarSincronizacaoAutomatica();
   atualizarSelo();

@@ -1,12 +1,12 @@
 // Primeira abertura do app: conta, nome, casa e avisos, em passos curtos.
 // Só aparece uma vez; depois disso o app abre direto no painel.
-import { obter, alterar, atualizar } from '../store.js';
+import { obter, alterar, garantirPessoa } from '../store.js';
 import { aviso } from '../ui.js';
 import { esc } from '../util.js';
 import { icone } from '../icones.js';
 import { cadastrar, entrar, criarCasa, entrarNaCasa, sincronizar,
-  iniciarSincronizacaoAutomatica } from '../nuvem.js';
-import { PALETAS, aplicarCor } from '../tema.js';
+  iniciarSincronizacaoAutomatica, usuarioAtual } from '../nuvem.js';
+import { PALETAS, aplicarCor, hexDaMatiz } from '../tema.js';
 import { pedirPermissao, permissaoNotificacao, tentarSyncPeriodico } from '../notify.js';
 
 const CORES_PESSOA = ['#6366f1', '#ec4899', '#10b981', '#f59e0b', '#8b5cf6', '#06b6d4'];
@@ -227,9 +227,10 @@ export function abrirBoasVindas() {
       </form>`;
 
     LIGAR[3] = () => {
-      const salvarPessoa = (id) => {
-        alterar((d) => { d.config.pessoaId = id; });
-        atualizar('pessoas', id, { nome: dados.nome, cor: CORES_PESSOA[id === 'p_1' ? 0 : 1] });
+      // A ficha da pessoa pertence à conta: assim o nome de um nunca
+      // sobrescreve o do outro quando os dois sincronizam.
+      const salvarPessoa = () => {
+        garantirPessoa(usuarioAtual()?.id, { nome: dados.nome, cor: hexDaMatiz(dados.matiz) });
       };
 
       if (dados.casaPronta) {
@@ -245,7 +246,7 @@ export function abrirBoasVindas() {
         e.target.disabled = true;
         try {
           const casa = await criarCasa('Nossa Casa', dados.nome);
-          salvarPessoa('p_1');
+          salvarPessoa();
           iniciarSincronizacaoAutomatica();
           await sincronizar();
           dados.casaPronta = true;
@@ -263,7 +264,7 @@ export function abrirBoasVindas() {
         if (!codigo) { aviso('Digite o código da casa.', 'atencao'); return; }
         try {
           await entrarNaCasa(codigo, dados.nome);
-          salvarPessoa('p_2');
+          salvarPessoa();
           iniciarSincronizacaoAutomatica();
           await sincronizar();
           aviso('Pronto! Os dois celulares agora mostram a mesma coisa.');
@@ -303,9 +304,12 @@ export function abrirBoasVindas() {
       }
       tela.querySelector('[data-fim]').onclick = () => {
         if (dados.nome && !dados.temConta) {
-          // Sem conta não há casa; ainda assim o nome vale neste aparelho.
-          alterar((d) => { d.config.pessoaId = 'p_1'; });
-          atualizar('pessoas', 'p_1', { nome: dados.nome });
+          // Sem conta não há casa; o nome fica só neste aparelho.
+          alterar((d) => {
+            d.config.pessoaId = 'p_1';
+            const i = d.pessoas.findIndex((x) => x.id === 'p_1');
+            if (i >= 0) d.pessoas[i] = { ...d.pessoas[i], nome: dados.nome };
+          });
         }
         encerrar();
       };

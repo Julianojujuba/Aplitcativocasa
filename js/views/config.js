@@ -1,5 +1,5 @@
 // Ajustes: nomes do casal, tema, notificações, backup e sincronização por arquivo.
-import { obter, alterar, atualizar, exportarJSON, importarJSON, apagarTudo } from '../store.js';
+import { obter, alterar, atualizar, pessoasVisiveis, exportarJSON, importarJSON, apagarTudo } from '../store.js';
 import { abrirFormulario, confirmar, aviso } from '../ui.js';
 import { esc, hojeISO, fmtData } from '../util.js';
 import { permissaoNotificacao, pedirPermissao, notificacaoDeTeste, tentarSyncPeriodico, verificarEDisparar } from '../notify.js';
@@ -87,8 +87,8 @@ function blocoNuvem(d) {
 
     <div class="linha-botoes linha-botoes--largo">
       <button class="botao botao--primario" data-acao="nuvem-sincronizar">Sincronizar agora</button>
-      <button class="botao botao--suave" data-acao="nuvem-sair">Desligar</button>
     </div>
+    <button class="botao botao--perigo-suave botao--largo" data-acao="nuvem-sair">Sair da conta</button>
   </section>`;
 }
 
@@ -378,7 +378,7 @@ export function render(raiz) {
 
     <section class="painel">
       <div class="painel__topo"><h3>${icone('pessoas', 17)} Quem mora aqui</h3></div>
-      ${d.pessoas.map((p) => `
+      ${pessoasVisiveis().map((p) => `
         <article class="item item--compacto">
           <span class="avatar" style="background:${esc(p.cor)}">${esc(p.nome[0] || '?')}</span>
           <div class="item__conteudo" data-pessoa="${p.id}">
@@ -598,11 +598,11 @@ export function render(raiz) {
     }
     if (acao === 'nuvem-sair') {
       const ok = await confirmar({
-        titulo: 'Desligar a sincronização',
-        mensagem: 'Este celular para de conversar com o outro. Os dados continuam aqui e no outro aparelho — nada é apagado. Continuar?',
-        textoOk: 'Desligar'
+        titulo: 'Sair da conta',
+        mensagem: 'Este celular para de sincronizar com o outro. Nada é apagado: os dados continuam aqui e no celular dela. Você pode entrar de novo quando quiser.',
+        textoOk: 'Sair', perigo: true
       });
-      if (ok) { sair(); aviso('Sincronização desligada.'); render(raiz); }
+      if (ok) { sair(); aviso('Você saiu da conta.'); render(raiz); }
       return;
     }
 

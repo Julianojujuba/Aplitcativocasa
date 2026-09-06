@@ -1,5 +1,5 @@
 // Tela inicial: o resumo do dia da casa, juntando agenda, remédios, contas e dinheiro.
-import { obter } from '../store.js';
+import { obter, pessoasVisiveis } from '../store.js';
 import { cartaoNumero, barraProgresso } from '../ui.js';
 import { esc, fmtMoney, fmtDataCurta, hojeISO, competenciaDe, labelCompetencia, diasEntre, isoParaData, DIAS_SEMANA_LONGO, MESES } from '../util.js';
 import { resumoMes } from '../financas.js';
@@ -61,7 +61,7 @@ export function render(raiz) {
   const dataExtenso = `${DIAS_SEMANA_LONGO[hojeData.getDay()]}, ${hojeData.getDate()} de ${MESES[hojeData.getMonth()].toLowerCase()}`;
   // Cumprimenta quem está com este celular na mão; se não souber, os dois.
   const dono = d.pessoas.find((p) => p.id === d.config.pessoaId);
-  const nomes = dono ? dono.nome : d.pessoas.map((p) => p.nome).join(' e ');
+  const nomes = dono ? dono.nome : pessoasVisiveis().map((p) => p.nome).join(' e ');
 
   raiz.innerHTML = `
     <header class="boas-vindas">

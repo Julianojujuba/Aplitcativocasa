@@ -1,7 +1,8 @@
 // Sincronização entre os celulares da casa.
 // Fala direto com a API do Supabase por fetch — sem biblioteca externa, para o
 // app continuar leve e funcionando offline.
-import { obter, alterar, salvarSilencioso, aplicarLoteDaNuvem, colecoesSincronizadas } from './store.js';
+import { obter, alterar, salvarSilencioso, aplicarLoteDaNuvem, colecoesSincronizadas,
+  garantirPessoa } from './store.js';
 
 // Anotações de controle da sincronização (quando foi a última, até onde já
 // enviei) não são conteúdo: se gravassem como mudança normal, o app
@@ -107,13 +108,20 @@ function traduzir(msg) {
 export async function entrar(email, senha) {
   const s = await autenticar('/auth/v1/token?grant_type=password', email, senha);
   gravarSessao(s);
+  // Toda conta tem a sua ficha de pessoa, seja entrando por aqui ou pelas
+  // boas-vindas — sem ela o nome deste aparelho não chegaria no outro.
+  garantirPessoa(s.user?.id);
   return s.user;
 }
 
 // Devolve { precisaConfirmarEmail: true } quando o projeto exige confirmação.
 export async function cadastrar(email, senha) {
   const s = await autenticar('/auth/v1/signup', email, senha);
-  if (s.access_token) { gravarSessao(s); return { user: s.user }; }
+  if (s.access_token) {
+    gravarSessao(s);
+    garantirPessoa(s.user?.id);
+    return { user: s.user };
+  }
   return { precisaConfirmarEmail: true };
 }
 
@@ -204,8 +212,11 @@ async function enviarMudancas() {
 
   for (const colecao of colecoesSincronizadas()) {
     for (const item of (d[colecao] || [])) {
-      // Sem carimbo nenhum (ex.: as duas pessoas que já vêm criadas) vale 1,
-      // e não 0: com 0 o item empataria com a marca inicial e nunca subiria.
+      // As fichas de pessoa que o app cria sozinho são rascunho local: se
+      // subissem, o "Eu" de um celular apagaria o nome do outro.
+      if (colecao === 'pessoas' && !item.dono) continue;
+      // Sem carimbo nenhum vale 1, e não 0: com 0 o item empataria com a
+      // marca inicial e nunca subiria.
       const quando = item.atualizadoEm || item.criadoEm || 1;
       if (quando <= ultimoPushEm) continue;
       linhas.push({ casa_id: casaId, colecao, id: item.id, dados: item, removido: false });
