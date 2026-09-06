@@ -196,38 +196,53 @@ function blocoGoogle(d) {
   const link = d.config.linkAgendaGoogle || '';
   const ultima = d.config.ultimaImportacaoGoogle;
   return `<section class="painel">
-    <div class="painel__topo"><h3>${icone('agenda', 17)} Trazer a agenda do Google</h3></div>
-    <p class="texto-suave">Para não precisar redigitar o que já está marcado lá.</p>
+    <div class="painel__topo"><h3>${icone('agenda', 17)} Trazer a agenda que vocês já usam</h3></div>
+    <p class="texto-suave">Do iPhone ou do Google, para não redigitar o que já está marcado.</p>
 
     <div class="campo">
-      <label class="campo__rotulo" for="link-agenda">Link secreto da sua agenda</label>
+      <label class="campo__rotulo" for="link-agenda">Link da sua agenda</label>
       <input id="link-agenda" type="url" class="entrada" data-config-valor="linkAgendaGoogle"
-        value="${esc(link)}" placeholder="https://calendar.google.com/calendar/ical/..."
+        value="${esc(link)}" placeholder="Cole aqui o link da agenda"
         autocomplete="off" spellcheck="false">
       <small class="campo__dica">Cola uma vez e pronto: dá para reler quando quiser,
         e o app relê sozinho uma vez por dia.</small>
     </div>
     <button class="botao botao--primario botao--largo" data-acao="google-link"
-      ${link ? '' : 'disabled'}>Importar do Google agora</button>
+      ${link ? '' : 'disabled'}>Importar agenda agora</button>
     ${link ? '' : '<small class="campo__dica">Cole o link acima para liberar este botão.</small>'}
 
     <details class="ajuda" id="ajuda-link" ${ajudaLinkAberta ? 'open' : ''}>
-      <summary>Onde acho esse link (1 minuto)</summary>
+      <summary>Onde acho esse link</summary>
+
+      <p class="texto-suave"><strong>No iPhone</strong> — dá para fazer no próprio celular:</p>
       <ol class="lista-passos">
-        <li>Abra <strong>calendar.google.com</strong> (no computador, ou no celular
-          pedindo "versão para computador" no navegador).</li>
-        <li>No menu da esquerda, passe o mouse na sua agenda → <strong>⋮</strong> →
-          <strong>Configurações e compartilhamento</strong>.</li>
-        <li>Role até <strong>Endereço secreto no formato iCal</strong>.</li>
-        <li>Copie aquele endereço e cole aqui em cima.</li>
+        <li>Abra o app <strong>Calendário</strong>.</li>
+        <li>Toque em <strong>Calendários</strong>, embaixo no meio.</li>
+        <li>Toque no <strong>ⓘ</strong> ao lado da agenda que você quer trazer.</li>
+        <li>Ligue <strong>Calendário Público</strong>.</li>
+        <li>Toque em <strong>Compartilhar Link</strong> → <strong>Copiar</strong>.</li>
+        <li>Volte aqui e cole no campo acima.</li>
       </ol>
-      <small class="campo__dica">É um endereço privado: quem tiver ele vê a sua agenda.
-        Se um dia quiser cortar o acesso, o próprio Google tem o botão de gerar outro.</small>
+
+      <p class="texto-suave"><strong>No Google Agenda</strong> — precisa da versão para computador:</p>
+      <ol class="lista-passos">
+        <li>Abra <strong>calendar.google.com</strong>.</li>
+        <li>No menu da esquerda, na sua agenda: <strong>⋮</strong> →
+          <strong>Configurações e compartilhamento</strong>.</li>
+        <li>Role até <strong>Endereço secreto no formato iCal</strong> e copie.</li>
+      </ol>
+
+      <div class="alerta">
+        <strong class="alerta__titulo">${icone('aviso', 15)} Sobre esse link</strong>
+        <span>Ele é a chave da sua agenda: quem tiver o endereço consegue ver os
+          compromissos dela. Não repasse. Para cortar o acesso depois, é só desligar
+          o compartilhamento no iPhone, ou gerar outro endereço no Google.</span>
+      </div>
     </details>
 
     <div class="linha-info"><span>Outros jeitos</span></div>
     <button class="botao botao--suave botao--largo" data-acao="google-ics">Importar arquivo .ics</button>
-    <small class="campo__dica">Se você já exportou a agenda em .zip pelo computador.</small>
+    <small class="campo__dica">Se você já tem o arquivo da agenda salvo no aparelho.</small>
 
     <details class="ajuda" id="ajuda-google" ${ajudaGoogleAberta ? 'open' : ''}>
       <summary>Conectar direto na conta (mais trabalhoso)</summary>
@@ -262,7 +277,7 @@ async function importarPeloLink(raiz, { silencioso = false } = {}) {
   const campo = raiz.querySelector('#link-agenda');
   const link = (campo?.value ?? obter().config.linkAgendaGoogle ?? '').trim();
   if (!pareceLinkDeAgenda(link)) {
-    if (!silencioso) aviso('Esse link não parece o endereço secreto de uma agenda do Google.', 'erro');
+    if (!silencioso) aviso('Esse link não parece o endereço de uma agenda do iPhone nem do Google.', 'erro');
     return;
   }
   // Guarda só depois de conferir, para não salvar um endereço torto.

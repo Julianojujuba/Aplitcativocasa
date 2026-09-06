@@ -147,20 +147,31 @@ dados. O que sincroniza é o conteúdo da casa, não o visual.
 
 ---
 
-## Trazer a agenda do Google
+## Trazer a agenda que vocês já usam
 
-Para não redigitar o que já está marcado lá. Dois caminhos, em
-**Ajustes → Trazer a agenda do Google**:
+Para não redigitar o que já está marcado. Em
+**Ajustes → Trazer a agenda que vocês já usam**:
 
-**O jeito fácil — link secreto (recomendado)**
-No Google Agenda, cada agenda tem um "Endereço secreto no formato iCal".
-Copie esse link uma vez, cole no app e pronto: dá para reler quando quiser, e
-o app relê sozinho uma vez por dia. O passo a passo está dentro do app.
+**O jeito fácil — o link da agenda (recomendado)**
+Funciona com o **iPhone** e com o **Google Agenda**. Copie o link da agenda
+uma vez, cole no app e pronto: dá para reler quando quiser, e o app relê
+sozinho uma vez por dia.
 
-Como o navegador não pode buscar esse endereço direto (o Google não libera
-leitura por outro site), uma função no Supabase faz o meio de campo. Ela só
-aceita endereços de agenda do Google e exige login — não vira um repassador
-aberto.
+- **iPhone:** Calendário → Calendários → **ⓘ** ao lado da agenda →
+  ligar **Calendário Público** → **Compartilhar Link**. Dá para fazer tudo no
+  próprio celular.
+- **Google:** calendar.google.com → **⋮** na agenda → Configurações e
+  compartilhamento → **Endereço secreto no formato iCal**. Precisa da versão
+  para computador.
+
+Esse link é a chave da agenda: quem tiver o endereço vê os compromissos. Para
+cortar o acesso, desligue o compartilhamento no iPhone ou gere outro endereço
+no Google.
+
+Como o navegador não pode buscar esse endereço direto (esses serviços não
+liberam leitura por outro site), uma função no Supabase faz o meio de campo.
+Ela só aceita endereços de agenda do Google e do iCloud e exige login — não
+vira um repassador aberto.
 
 **Arquivo .ics**
 No computador: Google Agenda → Configurações → "Importar e exportar" →

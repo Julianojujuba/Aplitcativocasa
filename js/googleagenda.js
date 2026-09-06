@@ -145,10 +145,11 @@ function interpretarRepeticao(rrule) {
 /* ---------------------------------------------------------------- link secreto */
 
 /*
-  O jeito fácil: o Google dá um endereço secreto para cada agenda. Copiar esse
-  link é tudo que a pessoa precisa fazer — e dá para reler quando quiser.
-  O navegador não consegue buscar direto (o Google não libera leitura por
-  outro site), então uma função nossa no servidor faz o meio de campo.
+  O jeito fácil: tanto o Google quanto o iPhone (iCloud) publicam um endereço
+  para a agenda. Copiar esse link é tudo que a pessoa precisa fazer — e dá
+  para reler quando quiser. O navegador não consegue buscar direto (esses
+  serviços não liberam leitura por outro site), então uma função nossa no
+  servidor faz o meio de campo.
 */
 export async function buscarPeloLink(link) {
   const { ics } = await chamarFuncao('agenda-google', { url: link });
@@ -158,7 +159,15 @@ export async function buscarPeloLink(link) {
 }
 
 export function pareceLinkDeAgenda(link) {
-  return /^(https|webcal):\/\/calendar\.google\.com\/calendar\/ical\/.+\.ics$/i.test(String(link || '').trim());
+  const bruto = String(link || '').trim().replace(/^webcal:/i, 'https:');
+  let alvo;
+  try { alvo = new URL(bruto); } catch { return false; }
+  if (alvo.protocol !== 'https:') return false;
+  const google = alvo.hostname === 'calendar.google.com'
+    && alvo.pathname.startsWith('/calendar/ical/') && alvo.pathname.endsWith('.ics');
+  const icloud = /^p\d+-calendars\.icloud\.com$/.test(alvo.hostname)
+    && alvo.pathname.startsWith('/published/');
+  return google || icloud;
 }
 
 // Relê a agenda sozinha, no máximo uma vez por dia, sem incomodar ninguém.
