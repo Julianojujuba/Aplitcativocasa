@@ -15,6 +15,7 @@ import * as mercado from './views/mercado.js';
 import * as contas from './views/contas.js';
 import * as financeiro from './views/financeiro.js';
 import * as config from './views/config.js';
+import { precisaDeBoasVindas, abrirBoasVindas } from './views/boasvindas.js';
 
 const TELAS = { inicio, agenda, farmacia, mercado, contas, financeiro, config };
 const MENU = ['inicio', 'agenda', 'farmacia', 'mercado', 'contas', 'financeiro'];
@@ -112,7 +113,7 @@ function talvezPedirNotificacao() {
 
 /* ---------- Início ---------- */
 
-function iniciar() {
+async function iniciar() {
   aplicarTema(obter().config.tema);
   aplicarCor(obter().config.matiz);
   observarTemaDoSistema(() => obter().config.tema);
@@ -143,6 +144,13 @@ function iniciar() {
   document.getElementById('botao-config').onclick = () => { location.hash = '#/config'; };
 
   registrarSW();
+
+  // Primeira abertura: conta, nome e casa antes de entrar no app.
+  if (precisaDeBoasVindas()) {
+    await abrirBoasVindas();
+    desenhar();
+  }
+
   iniciarMonitoramento();
   iniciarSincronizacaoAutomatica();
   atualizarSelo();

@@ -47,6 +47,8 @@ function estadoInicial() {
       resumoDiario: true,
       diasAvisoConta: 3,
       matiz: 189,
+      boasVindasFeito: false,
+      pessoaId: null,
       mascote: true,
       googleClientId: '',
       ultimaImportacaoGoogle: null,

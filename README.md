@@ -41,6 +41,18 @@ Guarde esse endereço — é por ele que vocês dois vão abrir o app.
 
 ---
 
+## Primeira abertura
+
+Na primeira vez, o app conduz a configuração em passos curtos: criar a conta
+(ou entrar numa existente), escolher **como você quer ser chamado** e a sua
+cor, criar a casa ou entrar com o código dela, e ativar os avisos. Depois
+disso ele abre direto no painel.
+
+Quem preferir só experimentar pode escolher **"Usar só neste celular por
+enquanto"** e ligar a sincronização depois, nos Ajustes.
+
+---
+
 ## Como instalar no celular
 
 Abra o endereço no navegador do celular e instale como aplicativo:
@@ -198,7 +210,7 @@ js/
   icones.js              ícones em SVG
   mascote.js             o ajudante que reage às ações
   tema.js                tema claro/escuro e cor de destaque
-  views/                 uma tela por arquivo
+  views/                 uma tela por arquivo (boasvindas.js é a primeira abertura)
 oauth.html               página de passagem da autorização do Google
 ```
 

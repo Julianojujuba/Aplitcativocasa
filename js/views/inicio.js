@@ -59,7 +59,9 @@ export function render(raiz) {
 
   const hojeData = new Date();
   const dataExtenso = `${DIAS_SEMANA_LONGO[hojeData.getDay()]}, ${hojeData.getDate()} de ${MESES[hojeData.getMonth()].toLowerCase()}`;
-  const nomes = d.pessoas.map((p) => p.nome).join(' e ');
+  // Cumprimenta quem está com este celular na mão; se não souber, os dois.
+  const dono = d.pessoas.find((p) => p.id === d.config.pessoaId);
+  const nomes = dono ? dono.nome : d.pessoas.map((p) => p.nome).join(' e ');
 
   raiz.innerHTML = `
     <header class="boas-vindas">

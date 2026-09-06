@@ -868,7 +868,9 @@ input[type="date"].entrada, input[type="time"].entrada { color-scheme: inherit; 
 /* ---------- Avisos flutuantes ---------- */
 
 .avisos {
-  position: fixed; left: 0; right: 0; z-index: 200; pointer-events: none;
+  /* Acima de tudo, inclusive das boas-vindas: um erro de senha precisa
+     aparecer justamente quando há uma tela cheia por cima. */
+  position: fixed; left: 0; right: 0; z-index: 400; pointer-events: none;
   bottom: calc(var(--altura-menu) + var(--seguro-baixo) + 14px);
   display: flex; flex-direction: column; align-items: center; gap: 7px; padding: 0 14px;
 }
@@ -1095,3 +1097,68 @@ input[type="date"].entrada, input[type="time"].entrada { color-scheme: inherit; 
 .paleta--livre input {
   position: absolute; inset: -20%; width: 140%; height: 140%; opacity: 0; cursor: pointer; border: 0;
 }
+
+/* ==========================================================================
+   Primeira abertura
+   ========================================================================== */
+
+.boas-vindas-tela {
+  position: fixed; inset: 0; z-index: 300; overflow-y: auto;
+  background: var(--fundo-0);
+  display: flex; align-items: center; justify-content: center;
+  padding: calc(24px + var(--seguro-cima)) 18px calc(24px + var(--seguro-baixo));
+}
+.boas-vindas-tela::before {
+  content: ''; position: fixed; inset: 0; pointer-events: none;
+  background:
+    radial-gradient(900px 560px at 50% -10%, hsl(var(--matiz) 90% 55% / .18), transparent 62%),
+    radial-gradient(700px 500px at 110% 105%, rgba(255, 178, 36, .1), transparent 60%),
+    linear-gradient(180deg, var(--fundo-1), var(--fundo-0));
+}
+
+.bv {
+  position: relative; width: 100%; max-width: 420px;
+  display: flex; flex-direction: column; gap: 22px;
+}
+.bv__topo { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+.bv__marca {
+  width: 64px; height: 64px; display: grid; place-items: center; border-radius: 50%;
+  color: var(--cor-primaria); border: 1px solid var(--cor-borda-forte);
+  box-shadow: var(--brilho-forte), inset 0 0 26px hsl(var(--matiz) 90% 55% / .16);
+  animation: pulso-reator 3.2s ease-in-out infinite;
+}
+.bv__pontos { display: flex; gap: 6px; }
+.bv__pontos i {
+  width: 6px; height: 6px; border-radius: 50%; background: var(--cor-borda-forte);
+  transition: all .25s;
+}
+.bv__pontos i.is-feito { background: var(--cor-primaria); opacity: .55; }
+.bv__pontos i.is-atual { background: var(--cor-primaria); width: 20px; border-radius: 3px; box-shadow: var(--brilho); }
+
+.bv__corpo { display: flex; flex-direction: column; gap: 14px; }
+.bv__titulo {
+  font-size: 27px; letter-spacing: .16em; text-transform: uppercase; text-align: center;
+  color: var(--cor-primaria-forte); text-shadow: var(--brilho);
+}
+.bv__titulo--menor { font-size: 17px; letter-spacing: .1em; }
+.bv__texto { font-size: 14px; line-height: 1.55; color: var(--cor-texto-suave); text-align: center; margin: 0; }
+
+.bv__lista { list-style: none; margin: 6px 0; padding: 0; display: flex; flex-direction: column; gap: 11px; }
+.bv__lista li { display: flex; align-items: center; gap: 11px; font-size: 13.5px; }
+.bv__lista .icone { color: var(--cor-primaria); flex-shrink: 0; }
+
+.bv__form { display: flex; flex-direction: column; gap: 9px; }
+.bv__form .linha-botoes { margin-top: 6px; }
+.entrada--grande { font-size: 19px; text-align: center; padding: 14px 12px; }
+.entrada--codigo {
+  font-family: var(--mono); font-size: 22px; text-align: center;
+  letter-spacing: .3em; text-transform: uppercase; padding: 14px 12px;
+}
+.codigo-casa--grande { justify-content: center; padding: 18px; }
+.codigo-casa--grande strong { font-size: 27px; }
+
+.bv__pular {
+  background: none; border: 0; cursor: pointer; padding: 10px;
+  color: var(--cor-texto-suave); font: inherit; font-size: 12.5px; text-decoration: underline;
+}
+.bv__pular:hover { color: var(--cor-primaria); }

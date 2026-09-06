@@ -24,6 +24,7 @@ const ARQUIVOS = [
   './js/views/contas.js',
   './js/views/financeiro.js',
   './js/views/config.js',
+  './js/views/boasvindas.js',
   './assets/icons/icon-192.png',
   './assets/icons/icon-512.png',
   './assets/icons/favicon-32.png',
