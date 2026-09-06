@@ -46,10 +46,12 @@ function estadoInicial() {
       horaResumoDiario: '08:00',
       resumoDiario: true,
       diasAvisoConta: 3,
+      lembretePadraoMin: 60,
       matiz: 189,
       boasVindasFeito: false,
       pessoaId: null,
       mascote: true,
+      linkAgendaGoogle: '',
       googleClientId: '',
       ultimaImportacaoGoogle: null,
       criadoEm: hojeISO()

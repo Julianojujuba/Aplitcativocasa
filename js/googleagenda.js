@@ -1,8 +1,9 @@
 // Trazer os compromissos que já existem no Google Agenda.
 // Dois caminhos: conectar na conta (traz sempre) ou importar um arquivo .ics
 // exportado do Google (não exige configuração nenhuma).
-import { obter, inserir, atualizar } from './store.js';
-import { dataParaISO } from './util.js';
+import { obter, alterar, inserir, atualizar } from './store.js';
+import { dataParaISO, fmtData, hojeISO } from './util.js';
+import { chamarFuncao } from './nuvem.js';
 
 const ESCOPO = 'https://www.googleapis.com/auth/calendar.readonly';
 
@@ -139,6 +140,44 @@ function interpretarRepeticao(rrule) {
   if (freq === 'MONTHLY') return 'mensal';
   if (freq === 'YEARLY') return 'anual';
   return 'nenhuma';
+}
+
+/* ---------------------------------------------------------------- link secreto */
+
+/*
+  O jeito fácil: o Google dá um endereço secreto para cada agenda. Copiar esse
+  link é tudo que a pessoa precisa fazer — e dá para reler quando quiser.
+  O navegador não consegue buscar direto (o Google não libera leitura por
+  outro site), então uma função nossa no servidor faz o meio de campo.
+*/
+export async function buscarPeloLink(link) {
+  const { ics } = await chamarFuncao('agenda-google', { url: link });
+  const lista = interpretarICS(ics);
+  if (!lista.length) throw new Error('A agenda veio vazia — não achei compromissos nela.');
+  return lista;
+}
+
+export function pareceLinkDeAgenda(link) {
+  return /^(https|webcal):\/\/calendar\.google\.com\/calendar\/ical\/.+\.ics$/i.test(String(link || '').trim());
+}
+
+// Relê a agenda sozinha, no máximo uma vez por dia, sem incomodar ninguém.
+export async function relerAgendaSeNecessario({ minimoHoras = 20 } = {}) {
+  const d = obter();
+  const link = (d.config.linkAgendaGoogle || '').trim();
+  if (!link || !pareceLinkDeAgenda(link) || !navigator.onLine) return null;
+  if (Date.now() - (d.config.ultimaLeituraLinkEm || 0) < minimoHoras * 3600000) return null;
+  try {
+    const r = importarEventos(await buscarPeloLink(link));
+    alterar((dd) => {
+      dd.config.ultimaLeituraLinkEm = Date.now();
+      dd.config.ultimaImportacaoGoogle = fmtData(hojeISO());
+    });
+    return r;
+  } catch (e) {
+    console.warn('Não consegui reler a agenda do Google agora:', e);
+    return null;
+  }
 }
 
 /* ---------------------------------------------------------------- arquivo .ics */

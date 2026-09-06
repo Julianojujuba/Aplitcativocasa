@@ -137,6 +137,10 @@ Em **Ajustes → Aparência**:
 - **Ajudante da casa** — o robô no canto que comemora junto quando você anota
   um compromisso, toma o remédio ou paga uma conta. Pode desligar.
 
+Em **Ajustes → Notificações** dá para escolher com quanta antecedência avisar
+dos compromissos e das contas. Cada compromisso ainda pode ter o seu próprio
+tempo de aviso, no campo "Avisar" do formulário.
+
 **Cada celular tem a sua aparência.** Essas preferências não são
 sincronizadas: você pode deixar o seu num tom e ela no dela, olhando os mesmos
 dados. O que sincroniza é o conteúdo da casa, não o visual.
@@ -148,15 +152,23 @@ dados. O que sincroniza é o conteúdo da casa, não o visual.
 Para não redigitar o que já está marcado lá. Dois caminhos, em
 **Ajustes → Trazer a agenda do Google**:
 
-**Sem configurar nada — arquivo .ics**
+**O jeito fácil — link secreto (recomendado)**
+No Google Agenda, cada agenda tem um "Endereço secreto no formato iCal".
+Copie esse link uma vez, cole no app e pronto: dá para reler quando quiser, e
+o app relê sozinho uma vez por dia. O passo a passo está dentro do app.
+
+Como o navegador não pode buscar esse endereço direto (o Google não libera
+leitura por outro site), uma função no Supabase faz o meio de campo. Ela só
+aceita endereços de agenda do Google e exige login — não vira um repassador
+aberto.
+
+**Arquivo .ics**
 No computador: Google Agenda → Configurações → "Importar e exportar" →
-Exportar. Baixa um .zip; descompacte e escolha o .ics no app. Ele entende
-compromissos de dia inteiro, com hora, com fuso e os que se repetem.
+Exportar. Baixa um .zip; descompacte e escolha o .ics no app.
 
 **Conectado na conta**
-Traz os compromissos direto, sempre que você pedir. Exige criar uma
-credencial gratuita no Google uma única vez — o passo a passo está dentro do
-próprio app, em "Como conseguir esse ID".
+Exige criar uma credencial no Google Cloud. Só vale se o link secreto não
+servir; o passo a passo está no app.
 
 Importar duas vezes não duplica nada: o que já existe é atualizado.
 

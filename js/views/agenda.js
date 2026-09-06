@@ -16,7 +16,7 @@ const REPETICOES = [
   { valor: 'anual', texto: 'Todo ano' }
 ];
 
-const LEMBRETES = [
+export const LEMBRETES = [
   { valor: '0', texto: 'Na hora' },
   { valor: '15', texto: '15 minutos antes' },
   { valor: '30', texto: '30 minutos antes' },
@@ -48,7 +48,7 @@ async function novoEvento(dataSugerida) {
     campos: campos(),
     valores: {
       data: dataSugerida || hojeISO(), hora: '09:00', categoria: 'Casa',
-      lembreteMin: '60', repeticao: 'nenhuma'
+      lembreteMin: String(obter().config.lembretePadraoMin ?? 60), repeticao: 'nenhuma'
     }
   });
   if (!v) return;

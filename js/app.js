@@ -2,6 +2,7 @@
 import { obter, inscrever, garantirPessoa } from './store.js';
 import { aplicarTema, observarTemaDoSistema, aplicarCor } from './tema.js';
 import { montar as montarMascote } from './mascote.js';
+import { relerAgendaSeNecessario } from './googleagenda.js';
 import { definirRegistroSW, iniciarMonitoramento, alertasParaExibir, verificarEDisparar,
   permissaoNotificacao, pedirPermissao, tentarSyncPeriodico } from './notify.js';
 import { aviso } from './ui.js';
@@ -167,6 +168,7 @@ async function iniciar() {
   iniciarMonitoramento();
   iniciarSincronizacaoAutomatica();
   atualizarSelo();
+  relerAgendaSeNecessario();
   setTimeout(talvezPedirNotificacao, 1500);
 
   // Vira o dia? Redesenha para as datas ficarem certas.

@@ -137,6 +137,22 @@ export function sair({ apagarDadosLocais = false } = {}) {
   });
 }
 
+// Chama uma função nossa lá no servidor, já com a identificação da conta.
+export async function chamarFuncao(nome, corpo) {
+  const token = await tokenValido();
+  if (!token) throw new Error('Entre na sua conta para usar isto.');
+  const r = await fetch(`${URL_BASE}/functions/v1/${nome}`, {
+    method: 'POST',
+    headers: {
+      apikey: CHAVE_PUBLICA, Authorization: `Bearer ${token}`, 'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(corpo)
+  });
+  const dados = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(dados?.erro || `Não deu certo (erro ${r.status}).`);
+  return dados;
+}
+
 /* ---------------------------------------------------------------- a casa */
 
 export async function criarCasa(nome, apelido) {

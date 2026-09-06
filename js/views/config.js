@@ -1,18 +1,20 @@
 // Ajustes: nomes do casal, tema, notificações, backup e sincronização por arquivo.
-import { obter, alterar, atualizar, pessoasVisiveis, exportarJSON, importarJSON, apagarTudo } from '../store.js';
+import { obter, alterar, atualizar, pessoasVisiveis, salvarSilencioso,
+  exportarJSON, importarJSON, apagarTudo } from '../store.js';
 import { abrirFormulario, confirmar, aviso } from '../ui.js';
 import { esc, hojeISO, fmtData } from '../util.js';
 import { permissaoNotificacao, pedirPermissao, notificacaoDeTeste, tentarSyncPeriodico, verificarEDisparar } from '../notify.js';
 import { aplicarTema, aplicarCor, PALETAS, matizDoHex, hexDaMatiz, MATIZ_PADRAO } from '../tema.js';
 import { atualizarPresenca, reagir } from '../mascote.js';
 import { icone } from '../icones.js';
+import { LEMBRETES } from './agenda.js';
 import {
   estaConectado, usuarioAtual, entrar, cadastrar, sair, criarCasa, entrarNaCasa,
   sincronizar, iniciarSincronizacaoAutomatica
 } from '../nuvem.js';
 import {
   conectarAoGoogle, listarAgendas, buscarEventos, interpretarICS,
-  importarEventos, enderecoDeRetorno
+  importarEventos, enderecoDeRetorno, buscarPeloLink, pareceLinkDeAgenda
 } from '../googleagenda.js';
 
 export const titulo = 'Ajustes';
@@ -20,6 +22,18 @@ export const chaveIcone = 'engrenagem';
 
 // Lembra se o passo a passo do Google estava aberto, para não fechar sozinho.
 let ajudaGoogleAberta = false;
+let ajudaLinkAberta = false;
+
+// Liga ou desliga os botões que só fazem sentido com o campo preenchido.
+function atualizarBotoesDependentes(raiz) {
+  const pares = [['#link-agenda', '[data-acao="google-link"]'],
+                 ['#google-client', '[data-acao="google-conectar"]']];
+  for (const [campoSel, botaoSel] of pares) {
+    const campo = raiz.querySelector(campoSel);
+    const botao = raiz.querySelector(botaoSel);
+    if (campo && botao) botao.disabled = !campo.value.trim();
+  }
+}
 
 function quandoFoi(ts) {
   if (!ts) return 'ainda não';
@@ -179,46 +193,97 @@ async function acaoEntrarCasa(raiz) {
 
 function blocoGoogle(d) {
   const clientId = d.config.googleClientId || '';
+  const link = d.config.linkAgendaGoogle || '';
   const ultima = d.config.ultimaImportacaoGoogle;
   return `<section class="painel">
     <div class="painel__topo"><h3>${icone('agenda', 17)} Trazer a agenda do Google</h3></div>
     <p class="texto-suave">Para não precisar redigitar o que já está marcado lá.</p>
 
-    <div class="linha-info"><span>Jeito rápido, sem configurar nada</span></div>
-    <button class="botao botao--primario botao--largo" data-acao="google-ics">Importar arquivo .ics</button>
-    <small class="campo__dica">No computador, abra o Google Agenda → Configurações →
-      "Importar e exportar" → Exportar. Vem um .zip; descompacte e escolha aqui o arquivo .ics.</small>
-
-    <div class="linha-info"><span>Conectado na conta (traz sempre que você pedir)</span></div>
     <div class="campo">
-      <label class="campo__rotulo" for="google-client">ID do cliente do Google</label>
-      <input id="google-client" type="text" class="entrada" data-config-valor="googleClientId"
-        value="${esc(clientId)}" placeholder="000000-abc.apps.googleusercontent.com">
+      <label class="campo__rotulo" for="link-agenda">Link secreto da sua agenda</label>
+      <input id="link-agenda" type="url" class="entrada" data-config-valor="linkAgendaGoogle"
+        value="${esc(link)}" placeholder="https://calendar.google.com/calendar/ical/..."
+        autocomplete="off" spellcheck="false">
+      <small class="campo__dica">Cola uma vez e pronto: dá para reler quando quiser,
+        e o app relê sozinho uma vez por dia.</small>
     </div>
-    <button class="botao botao--suave botao--largo" data-acao="google-conectar"
-      ${clientId ? '' : 'disabled'}>Conectar e importar do Google</button>
-    ${clientId ? '' : '<small class="campo__dica">Preencha o ID acima para liberar este botão.</small>'}
+    <button class="botao botao--primario botao--largo" data-acao="google-link"
+      ${link ? '' : 'disabled'}>Importar do Google agora</button>
+    ${link ? '' : '<small class="campo__dica">Cole o link acima para liberar este botão.</small>'}
+
+    <details class="ajuda" id="ajuda-link" ${ajudaLinkAberta ? 'open' : ''}>
+      <summary>Onde acho esse link (1 minuto)</summary>
+      <ol class="lista-passos">
+        <li>Abra <strong>calendar.google.com</strong> (no computador, ou no celular
+          pedindo "versão para computador" no navegador).</li>
+        <li>No menu da esquerda, passe o mouse na sua agenda → <strong>⋮</strong> →
+          <strong>Configurações e compartilhamento</strong>.</li>
+        <li>Role até <strong>Endereço secreto no formato iCal</strong>.</li>
+        <li>Copie aquele endereço e cole aqui em cima.</li>
+      </ol>
+      <small class="campo__dica">É um endereço privado: quem tiver ele vê a sua agenda.
+        Se um dia quiser cortar o acesso, o próprio Google tem o botão de gerar outro.</small>
+    </details>
+
+    <div class="linha-info"><span>Outros jeitos</span></div>
+    <button class="botao botao--suave botao--largo" data-acao="google-ics">Importar arquivo .ics</button>
+    <small class="campo__dica">Se você já exportou a agenda em .zip pelo computador.</small>
 
     <details class="ajuda" id="ajuda-google" ${ajudaGoogleAberta ? 'open' : ''}>
-      <summary>Como conseguir esse ID (uma vez só, de graça)</summary>
+      <summary>Conectar direto na conta (mais trabalhoso)</summary>
+      <p class="texto-suave">Exige criar uma credencial no Google Cloud. Só vale a pena
+        se o link secreto não servir para você.</p>
+      <div class="campo">
+        <label class="campo__rotulo" for="google-client">ID do cliente do Google</label>
+        <input id="google-client" type="text" class="entrada" data-config-valor="googleClientId"
+          value="${esc(clientId)}" placeholder="000000-abc.apps.googleusercontent.com">
+      </div>
+      <button class="botao botao--suave botao--largo" data-acao="google-conectar"
+        ${clientId ? '' : 'disabled'}>Conectar e importar</button>
       <ol class="lista-passos">
         <li>Abra <strong>console.cloud.google.com</strong> e crie um projeto.</li>
-        <li>Em <strong>APIs e serviços → Biblioteca</strong>, ative a <strong>Google Calendar API</strong>.</li>
-        <li>Em <strong>Tela de permissão OAuth</strong>, escolha "Externo", preencha o nome e,
-          em "Usuários de teste", adicione o e-mail seu e o dela.</li>
-        <li>Em <strong>Credenciais → Criar credenciais → ID do cliente OAuth</strong>,
-          tipo <strong>Aplicativo da Web</strong>.</li>
-        <li>Em "Origens JavaScript autorizadas", coloque:<br><code>${esc(location.origin)}</code></li>
-        <li>Em "URIs de redirecionamento autorizados", coloque:<br><code>${esc(enderecoDeRetorno())}</code></li>
-        <li>Copie o ID gerado e cole no campo acima.</li>
+        <li>Ative a <strong>Google Calendar API</strong>.</li>
+        <li>Na tela de permissão OAuth, escolha "Externo" e adicione os e-mails de vocês
+          em "Usuários de teste".</li>
+        <li>Crie um <strong>ID do cliente OAuth</strong> do tipo Aplicativo da Web.</li>
+        <li>Origens autorizadas:<br><code>${esc(location.origin)}</code></li>
+        <li>URIs de redirecionamento:<br><code>${esc(enderecoDeRetorno())}</code></li>
       </ol>
-      <small class="campo__dica">Como o app fica em "teste", o Google mostra um aviso de
-        app não verificado. É esperado: basta seguir em "Avançado". Só vocês dois têm acesso.</small>
     </details>
 
     ${ultima ? `<div class="linha-info"><span>Última importação</span>
       <strong>${esc(ultima)}</strong></div>` : ''}
   </section>`;
+}
+
+async function importarPeloLink(raiz, { silencioso = false } = {}) {
+  // O que vale é o que está escrito no campo agora: esperar o "salvar ao sair
+  // do campo" travava o botão para quem colava o link e tocava em seguida.
+  const campo = raiz.querySelector('#link-agenda');
+  const link = (campo?.value ?? obter().config.linkAgendaGoogle ?? '').trim();
+  if (!pareceLinkDeAgenda(link)) {
+    if (!silencioso) aviso('Esse link não parece o endereço secreto de uma agenda do Google.', 'erro');
+    return;
+  }
+  // Guarda só depois de conferir, para não salvar um endereço torto.
+  if (link !== obter().config.linkAgendaGoogle) {
+    alterar((dd) => { dd.config.linkAgendaGoogle = link; });
+  }
+  try {
+    if (!silencioso) aviso('Buscando na sua agenda…');
+    const lista = await buscarPeloLink(link);
+    const r = importarEventos(lista);
+    alterar((dd) => {
+      dd.config.ultimaImportacaoGoogle = fmtData(hojeISO());
+      dd.config.ultimaLeituraLinkEm = Date.now();
+    });
+    if (!silencioso) {
+      aviso(`${r.novos} novos, ${r.atualizados} atualizados, ${r.ignorados} já estavam iguais.`);
+      render(raiz);
+    }
+  } catch (e) {
+    if (!silencioso) aviso(e.message, 'erro');
+  }
 }
 
 async function importarDoGoogle(raiz) {
@@ -416,6 +481,14 @@ export function render(raiz) {
           <input id="hora-resumo" type="time" class="entrada" data-config-valor="horaResumoDiario"
             value="${esc(d.config.horaResumoDiario || '08:00')}">
         </div>
+        <div class="campo">
+          <label class="campo__rotulo" for="lembrete-padrao">Avisar compromissos com antecedência de</label>
+          <select id="lembrete-padrao" class="entrada" data-config-valor="lembretePadraoMin">
+            ${LEMBRETES.map((l) => `<option value="${l.valor}"
+              ${String(d.config.lembretePadraoMin ?? 60) === l.valor ? 'selected' : ''}>${esc(l.texto)}</option>`).join('')}
+          </select>
+          <small class="campo__dica">Vale para os próximos compromissos; cada um pode ter o seu.</small>
+        </div>
         <div class="campo campo--metade">
           <label class="campo__rotulo" for="dias-aviso">Avisar contas com antecedência de</label>
           <input id="dias-aviso" type="number" min="0" max="15" class="entrada" data-config-valor="diasAvisoConta"
@@ -516,6 +589,15 @@ export function render(raiz) {
   raiz.querySelector('#ajuda-google')?.addEventListener('toggle', (e) => {
     ajudaGoogleAberta = e.target.open;
   });
+  raiz.querySelector('#ajuda-link')?.addEventListener('toggle', (e) => {
+    ajudaLinkAberta = e.target.open;
+  });
+
+  // Os botões que dependem de um campo preenchido acompanham a digitação,
+  // sem gravar nada (gravar redesenharia a tela e tiraria o cursor do campo).
+  for (const campo of raiz.querySelectorAll('#link-agenda, #google-client')) {
+    campo.addEventListener('input', () => atualizarBotoesDependentes(raiz));
+  }
 
   raiz.onchange = (e) => {
     const seletorCor = e.target.closest('#cor-livre');
@@ -540,9 +622,12 @@ export function render(raiz) {
     const valor = e.target.closest('[data-config-valor]');
     if (valor) {
       const chave = valor.dataset.configValor;
-      alterar((dados) => {
-        dados.config[chave] = chave === 'diasAvisoConta' ? Number(valor.value) : valor.value;
-      });
+      // Grava sem redesenhar: sair de um campo tocando num botão disparava
+      // este evento, a tela era reconstruída e o toque caía no botão antigo.
+      obter().config[chave] = ['diasAvisoConta', 'lembretePadraoMin'].includes(chave)
+        ? Number(valor.value) : valor.value;
+      salvarSilencioso();
+      atualizarBotoesDependentes(raiz);
       aviso('Ajuste salvo.');
     }
   };
@@ -569,6 +654,7 @@ export function render(raiz) {
     const acao = e.target.closest('[data-acao]')?.dataset.acao;
     if (!acao) return;
 
+    if (acao === 'google-link') { importarPeloLink(raiz); return; }
     if (acao === 'google-ics') { importarICS(raiz); return; }
     if (acao === 'google-conectar') { importarDoGoogle(raiz); return; }
     if (acao === 'nuvem-entrar') { acaoConta('entrar', raiz); return; }
