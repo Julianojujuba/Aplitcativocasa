@@ -103,6 +103,11 @@
 }
 
 * { box-sizing: border-box; }
+
+/* Estilo de autor vence o do navegador: sem isto, um `display` nosso (flex nos
+   botões e na faixa) anula o "esconder" embutido e o elemento fica na tela
+   mesmo marcado como oculto. */
+[hidden] { display: none !important; }
 html, body { height: 100%; }
 
 body {
