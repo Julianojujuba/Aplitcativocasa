@@ -42,6 +42,118 @@ function campos() {
   ];
 }
 
+/*
+  Entrada em lote: uma linha por compromisso. Serve para quem tem a agenda
+  numa lista (ou no calendário do iPhone, que não dá para exportar) e não quer
+  abrir um formulário por vez.
+
+  Formatos aceitos por linha:
+    10/09 14:00 Consulta com o dentista
+    12/09 Comprar shampoo
+    15/09 08:00 Academia semanal
+    20/09 Aniversário da Ana anual
+*/
+const PALAVRAS_REPETICAO = {
+  diaria: 'diaria', diária: 'diaria', diario: 'diaria', diário: 'diaria',
+  semanal: 'semanal', quinzenal: 'quinzenal', mensal: 'mensal',
+  anual: 'anual', aniversario: 'anual', aniversário: 'anual'
+};
+
+export function interpretarLinha(linha, hoje = hojeISO()) {
+  const bruto = String(linha).trim();
+  if (!bruto || bruto.startsWith('#')) return null;
+
+  let resto = bruto;
+  let repeticao = 'nenhuma';
+
+  // A repetição, quando existe, é a última palavra da linha.
+  const ultima = resto.split(/\s+/).pop().toLowerCase().replace(/[.,;]$/, '');
+  if (PALAVRAS_REPETICAO[ultima]) {
+    repeticao = PALAVRAS_REPETICAO[ultima];
+    resto = resto.slice(0, resto.toLowerCase().lastIndexOf(ultima)).trim();
+  }
+
+  const mData = resto.match(/^(\d{1,2})[\/.-](\d{1,2})(?:[\/.-](\d{2,4}))?\s*/);
+  if (!mData) return null;
+  resto = resto.slice(mData[0].length);
+
+  const dia = Number(mData[1]);
+  const mes = Number(mData[2]);
+  if (dia < 1 || dia > 31 || mes < 1 || mes > 12) return null;
+
+  let ano = mData[3] ? Number(mData[3]) : Number(hoje.slice(0, 4));
+  if (ano < 100) ano += 2000;
+
+  const p = (n) => String(n).padStart(2, '0');
+  let data = `${ano}-${p(mes)}-${p(dia)}`;
+  // Sem ano escrito e já bem no passado: quem escreve isso quer o ano que vem.
+  if (!mData[3] && diasEntre(hoje, data) < -180) {
+    data = `${ano + 1}-${p(mes)}-${p(dia)}`;
+  }
+  if (!isoParaData(data) || isoParaData(data).getDate() !== dia) return null;
+
+  let hora = '';
+  const mHora = resto.match(/^(\d{1,2})[:h](\d{2})\s*/);
+  if (mHora) {
+    const h = Number(mHora[1]), mi = Number(mHora[2]);
+    if (h < 24 && mi < 60) { hora = `${p(h)}:${p(mi)}`; resto = resto.slice(mHora[0].length); }
+  }
+
+  const titulo = resto.trim();
+  if (!titulo) return null;
+  return { titulo, data, hora, repeticao };
+}
+
+export function interpretarLista(texto, hoje = hojeISO()) {
+  const linhas = String(texto).split(/\r?\n/);
+  const bons = [];
+  const ruins = [];
+  linhas.forEach((linha, i) => {
+    if (!linha.trim()) return;
+    const item = interpretarLinha(linha, hoje);
+    if (item) bons.push(item);
+    else ruins.push({ numero: i + 1, texto: linha.trim() });
+  });
+  return { bons, ruins };
+}
+
+async function adicionarVarios() {
+  const v = await abrirFormulario({
+    titulo: 'Adicionar vários de uma vez',
+    campos: [
+      { nome: 'lista', rotulo: 'Um compromisso por linha', tipo: 'textoLongo',
+        obrigatorio: true,
+        placeholder: '10/09 14:00 Consulta com o dentista\n12/09 Comprar shampoo\n15/09 08:00 Academia semanal',
+        dica: 'Data, hora (opcional) e o que é. Para repetir, termine a linha com '
+            + 'semanal, quinzenal, mensal ou anual.' },
+      { nome: 'categoria', rotulo: 'Categoria de todos', tipo: 'selecao',
+        opcoes: CATEGORIAS_EVENTO, largura: 'metade' },
+      { nome: 'pessoa', rotulo: 'De quem são', tipo: 'pessoa', largura: 'metade' }
+    ],
+    valores: { categoria: 'Casa' },
+    textoOk: 'Adicionar',
+    aoValidar: (v) => {
+      const { bons } = interpretarLista(v.lista);
+      return bons.length ? null : 'Não consegui entender nenhuma linha. Comece cada uma com a data, como 10/09.';
+    }
+  });
+  if (!v) return;
+
+  const { bons, ruins } = interpretarLista(v.lista);
+  const lembrete = Number(obter().config.lembretePadraoMin ?? 60);
+  for (const item of bons) {
+    inserir('eventos', {
+      ...item, categoria: v.categoria, pessoa: v.pessoa,
+      lembreteMin: lembrete, concluido: false, local: '', notas: ''
+    });
+  }
+  sinalizar('evento');
+  aviso(ruins.length
+    ? `${bons.length} adicionados. ${ruins.length} linha${ruins.length > 1 ? 's' : ''} não entendi (linha ${ruins.map((r) => r.numero).join(', ')}).`
+    : `${bons.length} compromisso${bons.length > 1 ? 's' : ''} na agenda.`,
+    ruins.length ? 'atencao' : 'ok');
+}
+
 async function novoEvento(dataSugerida) {
   const v = await abrirFormulario({
     titulo: 'Novo compromisso',
@@ -173,12 +285,16 @@ export function render(raiz) {
           </h3>
           ${evs.map(cartaoEvento).join('')}
         </section>`).join('')}
+    <div class="linha-botoes linha-botoes--largo">
+      <button class="botao botao--suave" data-acao="varios">Adicionar vários de uma vez</button>
+    </div>
     <button class="botao-flutuante" data-acao="novo" aria-label="Novo compromisso">+</button>`;
 
   raiz.onclick = (e) => {
     const f = e.target.closest('[data-filtro]');
     if (f) { filtro = f.dataset.filtro; render(raiz); return; }
     if (e.target.closest('[data-acao="novo"]')) { novoEvento(); return; }
+    if (e.target.closest('[data-acao="varios"]')) { adicionarVarios(); return; }
     const c = e.target.closest('[data-concluir]');
     if (c) { concluir(c.dataset.concluir); return; }
     const x = e.target.closest('[data-excluir]');

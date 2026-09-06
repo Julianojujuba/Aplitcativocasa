@@ -173,6 +173,22 @@ liberam leitura por outro site), uma função no Supabase faz o meio de campo.
 Ela só aceita endereços de agenda do Google e do iCloud e exige login — não
 vira um repassador aberto.
 
+**Quando não existe link (calendário "No Meu iPhone")**
+Agenda que só vive no aparelho não tem endereço para publicar — a Apple só
+publica agenda do iCloud. Para esses casos existe **Agenda → Adicionar vários
+de uma vez**: uma linha por compromisso.
+
+```
+10/09 14:00 Consulta com o dentista
+12/09 Comprar shampoo
+15/09 08:00 Academia semanal
+20/09 Aniversário da Ana anual
+```
+
+Data, hora opcional e o que é. Terminando a linha com *semanal*, *quinzenal*,
+*mensal* ou *anual*, o compromisso passa a se repetir — o que costuma valer
+mais a pena que copiar cada ocorrência.
+
 **Arquivo .ics**
 No computador: Google Agenda → Configurações → "Importar e exportar" →
 Exportar. Baixa um .zip; descompacte e escolha o .ics no app.
