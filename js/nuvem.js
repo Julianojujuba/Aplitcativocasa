@@ -3,6 +3,15 @@
 // app continuar leve e funcionando offline.
 import { obter, alterar, salvarSilencioso, aplicarLoteDaNuvem, colecoesSincronizadas } from './store.js';
 
+// Anotações de controle da sincronização (quando foi a última, até onde já
+// enviei) não são conteúdo: se gravassem como mudança normal, o app
+// redesenharia a tela inteira a cada 15 segundos — fechando explicações
+// abertas e engolindo toques.
+function anotar(fn) {
+  fn(obter());
+  salvarSilencioso();
+}
+
 const URL_BASE = 'https://exfucguzruduggqecgwl.supabase.co';
 const CHAVE_PUBLICA = 'sb_publishable_o-d2mVMWubxZt_niddNM0g_nMRS0_ES';
 const CHAVE_SESSAO = 'casaApp:sessao:v1';
@@ -169,12 +178,13 @@ export async function sincronizar({ silencioso = true } = {}) {
   try {
     const enviados = await enviarMudancas();
     const recebidos = await buscarMudancas();
-    alterar((d) => { d.nuvem.ultimoErro = null; d.nuvem.ultimoSyncEm = Date.now(); });
+    anotar((d) => { d.nuvem.ultimoErro = null; d.nuvem.ultimoSyncEm = Date.now(); });
     window.dispatchEvent(new CustomEvent('nuvem-sincronizou', { detail: { enviados, recebidos } }));
     return { ok: true, enviados, recebidos, ms: Date.now() - inicio };
   } catch (e) {
     console.warn('Falha ao sincronizar:', e);
-    alterar((d) => { d.nuvem.ultimoErro = e.message; });
+    anotar((d) => { d.nuvem.ultimoErro = e.message; });
+    window.dispatchEvent(new CustomEvent('nuvem-sincronizou', { detail: { erro: e.message } }));
     if (!silencioso) throw e;
     return { ok: false, motivo: e.message };
   } finally {
@@ -216,7 +226,7 @@ async function enviarMudancas() {
       cabecalhos: { Prefer: 'resolution=merge-duplicates,return=minimal' }
     });
   }
-  alterar((dd) => { dd.nuvem.ultimoPushEm = marcaPush; });
+  anotar((dd) => { dd.nuvem.ultimoPushEm = marcaPush; });
   return linhas.length;
 }
 
@@ -243,7 +253,7 @@ async function buscarMudancas() {
   }
 
   if (marca && marca !== ultimoSyncServidor) {
-    alterar((dd) => { dd.nuvem.ultimoSyncServidor = marca; });
+    anotar((dd) => { dd.nuvem.ultimoSyncServidor = marca; });
   }
   return total;
 }

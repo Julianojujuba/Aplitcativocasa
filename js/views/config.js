@@ -18,6 +18,9 @@ import {
 export const titulo = 'Ajustes';
 export const chaveIcone = 'engrenagem';
 
+// Lembra se o passo a passo do Google estava aberto, para não fechar sozinho.
+let ajudaGoogleAberta = false;
+
 function quandoFoi(ts) {
   if (!ts) return 'ainda não';
   const seg = Math.round((Date.now() - ts) / 1000);
@@ -196,7 +199,7 @@ function blocoGoogle(d) {
       ${clientId ? '' : 'disabled'}>Conectar e importar do Google</button>
     ${clientId ? '' : '<small class="campo__dica">Preencha o ID acima para liberar este botão.</small>'}
 
-    <details class="ajuda">
+    <details class="ajuda" id="ajuda-google" ${ajudaGoogleAberta ? 'open' : ''}>
       <summary>Como conseguir esse ID (uma vez só, de graça)</summary>
       <ol class="lista-passos">
         <li>Abra <strong>console.cloud.google.com</strong> e crie um projeto.</li>
@@ -509,6 +512,10 @@ export function render(raiz) {
   // Botão de instalar do Chrome, quando o navegador oferece.
   const botaoInstalar = raiz.querySelector('[data-acao="instalar"]');
   if (botaoInstalar && window.promptInstalacao) botaoInstalar.hidden = false;
+
+  raiz.querySelector('#ajuda-google')?.addEventListener('toggle', (e) => {
+    ajudaGoogleAberta = e.target.open;
+  });
 
   raiz.onchange = (e) => {
     const seletorCor = e.target.closest('#cor-livre');
