@@ -96,7 +96,12 @@ export function interpretarLinha(linha, hoje = hojeISO()) {
   const mHora = resto.match(/^(\d{1,2})[:h](\d{2})\s*/);
   if (mHora) {
     const h = Number(mHora[1]), mi = Number(mHora[2]);
-    if (h < 24 && mi < 60) { hora = `${p(h)}:${p(mi)}`; resto = resto.slice(mHora[0].length); }
+    if (h < 24 && mi < 60) {
+      // 00:00 quase sempre é evento de dia inteiro exportado de outra agenda,
+      // não um compromisso à meia-noite.
+      if (h !== 0 || mi !== 0) hora = `${p(h)}:${p(mi)}`;
+      resto = resto.slice(mHora[0].length);
+    }
   }
 
   const titulo = resto.trim();
@@ -125,7 +130,8 @@ async function adicionarVarios() {
         obrigatorio: true,
         placeholder: '10/09 14:00 Consulta com o dentista\n12/09 Comprar shampoo\n15/09 08:00 Academia semanal',
         dica: 'Data, hora (opcional) e o que é. Para repetir, termine a linha com '
-            + 'semanal, quinzenal, mensal ou anual.' },
+            + 'semanal, quinzenal, mensal ou anual. Também aceita colar uma lista '
+            + 'pronta, como a que o app Atalhos do iPhone gera.' },
       { nome: 'categoria', rotulo: 'Categoria de todos', tipo: 'selecao',
         opcoes: CATEGORIAS_EVENTO, largura: 'metade' },
       { nome: 'pessoa', rotulo: 'De quem são', tipo: 'pessoa', largura: 'metade' }
