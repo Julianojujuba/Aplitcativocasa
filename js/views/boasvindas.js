@@ -23,7 +23,8 @@ export function abrirBoasVindas() {
     document.body.classList.add('sem-rolagem');
 
     // O que a pessoa foi respondendo pelo caminho.
-    const dados = { temConta: false, nome: '', matiz: 189, casaPronta: false, codigo: null };
+    const dados = { temConta: false, nome: '', matiz: 189, casaPronta: false, codigo: null,
+                    aguardandoEmail: null };
     let passo = 0;
 
     const encerrar = () => {
@@ -73,7 +74,18 @@ export function abrirBoasVindas() {
     };
 
     /* ------------------------------------------------ 1: conta */
-    PASSOS[1] = () => `
+    PASSOS[1] = () => dados.aguardandoEmail ? `
+      <h2 class="bv__titulo bv__titulo--menor">Confirme seu e-mail</h2>
+      <p class="bv__texto">Mandei uma mensagem para
+        <strong>${esc(dados.aguardandoEmail)}</strong>. Abra e toque no link de confirmação.</p>
+      <div class="alerta">
+        <strong class="alerta__titulo">${icone('aviso', 15)} O link vai abrir uma página com erro</strong>
+        <span>Ela diz "não é possível acessar esse site". Pode ignorar: sua conta
+          já foi confirmada no momento em que você tocou no link.</span>
+      </div>
+      <button class="botao botao--primario botao--largo" data-ja-confirmei>Já confirmei — entrar</button>
+      <button class="bv__pular" data-outro-email>Usar outro e-mail</button>
+    ` : `
       <h2 class="bv__titulo bv__titulo--menor">Sua conta</h2>
       <p class="bv__texto">É ela que deixa os dois celulares mostrando a mesma coisa.
         Você paga uma conta e o aviso some no celular dela.</p>
@@ -92,6 +104,28 @@ export function abrirBoasVindas() {
       <button class="bv__pular" data-pular>Usar só neste celular por enquanto</button>`;
 
     LIGAR[1] = () => {
+      if (dados.aguardandoEmail) {
+        tela.querySelector('[data-ja-confirmei]').onclick = async (ev) => {
+          ev.target.disabled = true;
+          try {
+            await entrar(dados.aguardandoEmail, dados.senhaTentada);
+            dados.temConta = true;
+            dados.aguardandoEmail = null;
+            irPara(2);
+          } catch (err) {
+            aviso(/confirm/i.test(err.message)
+              ? 'Ainda não constou como confirmado. Abra o link do e-mail e tente de novo.'
+              : err.message, 'erro');
+            ev.target.disabled = false;
+          }
+        };
+        tela.querySelector('[data-outro-email]').onclick = () => {
+          dados.aguardandoEmail = null;
+          desenhar();
+        };
+        return;
+      }
+
       const form = tela.querySelector('#bv-conta');
       const tentar = async (modo) => {
         const email = tela.querySelector('#bv-email').value.trim();
@@ -104,7 +138,9 @@ export function abrirBoasVindas() {
           if (modo === 'criar') {
             const r = await cadastrar(email, senha);
             if (r.precisaConfirmarEmail) {
-              aviso('Confirme o e-mail que enviei e depois use "Já tenho conta".', 'atencao');
+              dados.aguardandoEmail = email;
+              dados.senhaTentada = senha;
+              desenhar();
               return;
             }
           } else {
