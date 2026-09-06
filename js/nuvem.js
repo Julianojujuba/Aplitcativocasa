@@ -126,10 +126,15 @@ export async function cadastrar(email, senha) {
 }
 
 export function sair({ apagarDadosLocais = false } = {}) {
+  const meuId = usuarioAtual()?.id || null;
   gravarSessao(null);
   pararSincronizacaoAutomatica();
   alterar((d) => {
     d.nuvem = { casaId: null, codigo: null, nomeCasa: null, ultimoPushEm: 0, ultimoSyncServidor: null, ultimoErro: null };
+    // Saiu da casa: as fichas dos outros moradores não valem mais neste
+    // aparelho. Some sem túmulo de propósito — remover de verdade mandaria a
+    // exclusão para o celular dela, e sair da conta não apaga nada de ninguém.
+    if (meuId) d.pessoas = d.pessoas.filter((p) => !p.dono || p.dono === meuId);
     if (apagarDadosLocais) {
       for (const c of colecoesSincronizadas()) d[c] = [];
       d.tumulos = [];

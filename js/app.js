@@ -1,5 +1,5 @@
 // Ponto de entrada: navegação entre telas, service worker e ciclo de avisos.
-import { obter, inscrever, garantirPessoa } from './store.js';
+import { obter, alterar, inscrever, garantirPessoa } from './store.js';
 import { aplicarTema, observarTemaDoSistema, aplicarCor } from './tema.js';
 import { montar as montarMascote } from './mascote.js';
 import { relerAgendaSeNecessario } from './googleagenda.js';
@@ -152,6 +152,19 @@ async function iniciar() {
   window.addEventListener('nuvem-sincronizou', atualizarSelo);
 
   window.addEventListener('alertas-atualizados', atualizarSino);
+
+  // "Sair da conta" devolve o app para a tela de entrada, como faz qualquer
+  // outro aplicativo. Antes ele só desligava a sincronização por baixo e
+  // continuava aberto, com o nome e os moradores na tela — ninguém percebia
+  // que tinha saído de verdade.
+  window.addEventListener('pedir-boas-vindas', async () => {
+    alterar((d) => { d.config.boasVindasFeito = false; });
+    await abrirBoasVindas({ reentrada: true });
+    desenhar();
+    migrarPessoaDaConta();
+    iniciarSincronizacaoAutomatica();
+    atualizarSelo();
+  });
 
   document.getElementById('sino').onclick = () => { location.hash = '#/inicio'; };
   document.getElementById('botao-config').onclick = () => { location.hash = '#/config'; };

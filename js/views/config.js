@@ -700,10 +700,12 @@ export function render(raiz) {
     if (acao === 'nuvem-sair') {
       const ok = await confirmar({
         titulo: 'Sair da conta',
-        mensagem: 'Este celular para de sincronizar com o outro. Nada é apagado: os dados continuam aqui e no celular dela. Você pode entrar de novo quando quiser.',
+        mensagem: 'O app volta para a tela de entrada e este celular para de sincronizar com o outro. Nada é apagado: seus dados continuam aqui e no celular dela. Você pode entrar de novo quando quiser.',
         textoOk: 'Sair', perigo: true
       });
-      if (ok) { sair(); aviso('Você saiu da conta.'); render(raiz); }
+      // Quem cuida de voltar para a tela de entrada é o app.js — pedir por
+      // evento evita config.js e app.js ficarem importando um ao outro.
+      if (ok) { sair(); window.dispatchEvent(new Event('pedir-boas-vindas')); }
       return;
     }
 

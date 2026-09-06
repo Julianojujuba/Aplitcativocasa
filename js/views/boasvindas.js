@@ -15,7 +15,9 @@ export function precisaDeBoasVindas() {
   return obter().config?.boasVindasFeito !== true;
 }
 
-export function abrirBoasVindas() {
+// `reentrada` é quem já usou o app e saiu da conta: pula a apresentação, cai
+// direto no login e já vem com o nome e a cor que a pessoa tinha escolhido.
+export function abrirBoasVindas({ reentrada = false } = {}) {
   return new Promise((resolve) => {
     const tela = document.createElement('div');
     tela.className = 'boas-vindas-tela';
@@ -25,7 +27,13 @@ export function abrirBoasVindas() {
     // O que a pessoa foi respondendo pelo caminho.
     const dados = { temConta: false, nome: '', matiz: 189, casaPronta: false, codigo: null,
                     aguardandoEmail: null };
-    let passo = 0;
+    if (reentrada) {
+      const d = obter();
+      const eu = d.pessoas.find((p) => p.id === d.config.pessoaId);
+      dados.nome = eu?.nome || '';
+      dados.matiz = d.config.matiz ?? dados.matiz;
+    }
+    let passo = reentrada ? 1 : 0;
 
     const encerrar = () => {
       alterar((d) => { d.config.boasVindasFeito = true; });
