@@ -216,6 +216,36 @@ navegador e o Google — nenhuma senha passa pelo app.
 
 ---
 
+## Manutenção (para daqui a seis meses)
+
+**Onde as coisas moram**
+
+| O quê | Onde | Custo |
+|---|---|---|
+| O app | GitHub Pages, repositório público | grátis, não expira |
+| Contas e sincronização | Supabase, projeto **nossa-casa** (São Paulo) | grátis |
+| Leitura da agenda | função `agenda-google` no mesmo projeto | grátis |
+
+**Os dois precisam ter acesso.** Não transfira nada de dono: mudar o
+repositório de conta muda o endereço do app, e os dados guardados em cada
+celular ficam presos ao endereço antigo. Em vez disso:
+
+- Supabase: organização → **Team** → convidar a outra pessoa como **Owner**
+- GitHub: repositório → Settings → **Collaborators**
+
+**Se o projeto do Supabase pausar.** O plano gratuito pausa projetos com pouca
+atividade por 7 dias seguidos — algumas requisições por dia já evitam isso, e o
+app sozinho passa longe do limite enquanto for usado. Se acontecer (uma viagem
+longa, por exemplo), chega um e-mail de aviso uma semana antes e outro na hora
+da pausa. Para voltar: painel do Supabase → o projeto → **Resume project**. Os
+dados voltam como estavam, e há 90 dias de prazo para religar.
+
+**Para mudar o app depois.** Todo o código está no repositório e cada commit
+explica a decisão por trás da mudança. Basta abrir o projeto num assistente de
+código e pedir o que quiser; não é preciso reexplicar como o app funciona.
+
+---
+
 ## Para mexer no código
 
 Não precisa instalar nada nem compilar: é HTML, CSS e JavaScript puro
