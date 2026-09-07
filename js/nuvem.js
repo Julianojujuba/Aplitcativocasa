@@ -20,6 +20,7 @@ const CHAVE_SESSAO = 'casaApp:sessao:v1';
 const INTERVALO_SYNC = 15000;   // com o app aberto, verifica a cada 15s
 let temporizador = null;
 let sincronizando = false;
+let pedidoPendente = false;
 
 /* ---------------------------------------------------------------- sessão */
 
@@ -53,7 +54,15 @@ async function tokenValido() {
     headers: { apikey: CHAVE_PUBLICA, 'Content-Type': 'application/json' },
     body: JSON.stringify({ refresh_token: s.refresh_token })
   });
-  if (!r.ok) { gravarSessao(null); return null; }
+  // Só desiste quando o servidor diz que a sessão não vale mais. Internet
+  // ruim faz o fetch estourar acima daqui, e aí ninguém é deslogado à toa.
+  if (!r.ok) {
+    const morto = s.user?.id || null;
+    gravarSessao(null);
+    pararSincronizacaoAutomatica();
+    window.dispatchEvent(new CustomEvent('sessao-expirou', { detail: { usuarioId: morto } }));
+    return null;
+  }
   const nova = await r.json();
   gravarSessao(nova);
   return nova.access_token;
@@ -125,8 +134,8 @@ export async function cadastrar(email, senha) {
   return { precisaConfirmarEmail: true };
 }
 
-export function sair({ apagarDadosLocais = false } = {}) {
-  const meuId = usuarioAtual()?.id || null;
+export function sair({ apagarDadosLocais = false, usuarioId } = {}) {
+  const meuId = usuarioId ?? usuarioAtual()?.id ?? null;
   gravarSessao(null);
   pararSincronizacaoAutomatica();
   alterar((d) => {
@@ -199,7 +208,10 @@ export async function pessoasDaCasa() {
 /* ---------------------------------------------------------------- sincronizar */
 
 export async function sincronizar({ silencioso = true } = {}) {
-  if (sincronizando || !estaConectado()) return { ok: false, motivo: 'desligado' };
+  if (!estaConectado()) return { ok: false, motivo: 'desligado' };
+  // Pedido feito no meio de outra sincronização fica guardado para logo em
+  // seguida: descartar significaria a alteração esperar o ciclo inteiro.
+  if (sincronizando) { pedidoPendente = true; return { ok: false, motivo: 'em andamento' }; }
   if (!navigator.onLine) return { ok: false, motivo: 'offline' };
 
   sincronizando = true;
@@ -218,6 +230,7 @@ export async function sincronizar({ silencioso = true } = {}) {
     return { ok: false, motivo: e.message };
   } finally {
     sincronizando = false;
+    if (pedidoPendente) { pedidoPendente = false; setTimeout(sincronizar, 0); }
   }
 }
 
@@ -240,13 +253,15 @@ async function enviarMudancas() {
       // marca inicial e nunca subiria.
       const quando = item.atualizadoEm || item.criadoEm || 1;
       if (quando <= ultimoPushEm) continue;
-      linhas.push({ casa_id: casaId, colecao, id: item.id, dados: item, removido: false });
+      // O carimbo vai junto: é por ele que o servidor decide quem ganha
+      // quando os dois celulares mexeram no mesmo item.
+      linhas.push({ casa_id: casaId, colecao, id: item.id, dados: item, removido: false, carimbo: quando });
     }
   }
   // Exclusões viajam como marca de removido, senão sumiriam só num aparelho.
   for (const t of (d.tumulos || [])) {
     if (t.em <= ultimoPushEm) continue;
-    linhas.push({ casa_id: casaId, colecao: t.colecao, id: t.id, dados: null, removido: true });
+    linhas.push({ casa_id: casaId, colecao: t.colecao, id: t.id, dados: null, removido: true, carimbo: t.em });
   }
   if (!linhas.length) return 0;
 

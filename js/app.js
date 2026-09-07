@@ -7,7 +7,7 @@ import { definirRegistroSW, iniciarMonitoramento, alertasParaExibir, verificarED
   permissaoNotificacao, pedirPermissao, tentarSyncPeriodico } from './notify.js';
 import { aviso } from './ui.js';
 import { icone } from './icones.js';
-import { iniciarSincronizacaoAutomatica, sincronizarEmBreve, estaConectado, usuarioAtual } from './nuvem.js';
+import { iniciarSincronizacaoAutomatica, sincronizarEmBreve, estaConectado, usuarioAtual, sair } from './nuvem.js';
 
 import * as inicio from './views/inicio.js';
 import * as agenda from './views/agenda.js';
@@ -157,6 +157,15 @@ async function iniciar() {
   // outro aplicativo. Antes ele só desligava a sincronização por baixo e
   // continuava aberto, com o nome e os moradores na tela — ninguém percebia
   // que tinha saído de verdade.
+  // Sessão vencida ou conta apagada no servidor: em vez de ficar tentando
+  // sincronizar para sempre com um selo vermelho, avisa e pede para entrar.
+  window.addEventListener('sessao-expirou', (e) => {
+    if (!obter().nuvem?.casaId && !usuarioAtual()) return;
+    sair({ usuarioId: e.detail?.usuarioId });
+    aviso('Sua sessão expirou. Entre de novo para voltar a sincronizar.', 'atencao');
+    window.dispatchEvent(new Event('pedir-boas-vindas'));
+  });
+
   window.addEventListener('pedir-boas-vindas', async () => {
     alterar((d) => { d.config.boasVindasFeito = false; });
     await abrirBoasVindas({ reentrada: true });

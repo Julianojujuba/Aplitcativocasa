@@ -163,6 +163,15 @@ export function remover(colecao, id) {
   });
 }
 
+// Texto estável de um objeto, com as chaves sempre na mesma ordem. O banco
+// devolve o JSON com as chaves reordenadas, então comparar o texto cru diria
+// "mudou" mesmo quando não mudou nada.
+function impressao(v) {
+  if (v === null || typeof v !== 'object') return JSON.stringify(v) ?? 'null';
+  if (Array.isArray(v)) return '[' + v.map(impressao).join(',') + ']';
+  return '{' + Object.keys(v).sort().map((k) => JSON.stringify(k) + ':' + impressao(v[k])).join(',') + '}';
+}
+
 // Aplica de uma vez o que veio da nuvem, sem marcar como mudança local
 // (senão o app devolveria tudo de volta para o servidor sem parar).
 export function aplicarLoteDaNuvem(linhas) {
@@ -183,6 +192,10 @@ export function aplicarLoteDaNuvem(linhas) {
     // Não sobrescreve uma alteração daqui que ainda é mais nova.
     const local = i >= 0 ? lista[i] : null;
     if (local && (local.atualizadoEm || 0) > (linha.dados.atualizadoEm || 0)) continue;
+    // O que a gente mesmo acabou de enviar volta na leitura seguinte. Se isso
+    // contasse como novidade, a tela se redesenharia sozinha logo depois de
+    // cada toque — e o toque seguinte cairia no botão já substituído.
+    if (local && impressao(local) === impressao(linha.dados)) continue;
     if (i >= 0) lista[i] = linha.dados; else lista.unshift(linha.dados);
     mudou = true;
   }
