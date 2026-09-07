@@ -42,6 +42,19 @@ export function estaConectado() {
   return Boolean(lerSessao()?.access_token && obter().nuvem?.casaId);
 }
 
+// A sessão não vale mais (venceu, ou a conta sumiu do servidor). Avisa o app
+// uma vez só: sem isto ele ficava tentando sincronizar para sempre, com um
+// selo vermelho e nenhuma explicação de por quê.
+let sessaoJaDescartada = false;
+function descartarSessao() {
+  if (sessaoJaDescartada) return;
+  sessaoJaDescartada = true;
+  const morto = lerSessao()?.user?.id || null;
+  gravarSessao(null);
+  pararSincronizacaoAutomatica();
+  window.dispatchEvent(new CustomEvent('sessao-expirou', { detail: { usuarioId: morto } }));
+}
+
 async function tokenValido() {
   const s = lerSessao();
   if (!s?.access_token) return null;
@@ -56,13 +69,7 @@ async function tokenValido() {
   });
   // Só desiste quando o servidor diz que a sessão não vale mais. Internet
   // ruim faz o fetch estourar acima daqui, e aí ninguém é deslogado à toa.
-  if (!r.ok) {
-    const morto = s.user?.id || null;
-    gravarSessao(null);
-    pararSincronizacaoAutomatica();
-    window.dispatchEvent(new CustomEvent('sessao-expirou', { detail: { usuarioId: morto } }));
-    return null;
-  }
+  if (!r.ok) { descartarSessao(); return null; }
   const nova = await r.json();
   gravarSessao(nova);
   return nova.access_token;
@@ -83,6 +90,8 @@ async function chamar(caminho, { metodo = 'GET', corpo, cabecalhos = {} } = {}) 
   });
   const texto = await r.text();
   const dados = texto ? JSON.parse(texto) : null;
+  // 401 é o servidor recusando o token — não adianta insistir a cada 15s.
+  if (r.status === 401) { descartarSessao(); throw new Error('Sua sessão expirou. Entre de novo.'); }
   if (!r.ok) throw new Error(dados?.message || dados?.error_description || `Erro ${r.status}`);
   return dados;
 }
@@ -117,6 +126,7 @@ function traduzir(msg) {
 export async function entrar(email, senha) {
   const s = await autenticar('/auth/v1/token?grant_type=password', email, senha);
   gravarSessao(s);
+  sessaoJaDescartada = false;
   // Toda conta tem a sua ficha de pessoa, seja entrando por aqui ou pelas
   // boas-vindas — sem ela o nome deste aparelho não chegaria no outro.
   garantirPessoa(s.user?.id);
@@ -128,6 +138,7 @@ export async function cadastrar(email, senha) {
   const s = await autenticar('/auth/v1/signup', email, senha);
   if (s.access_token) {
     gravarSessao(s);
+    sessaoJaDescartada = false;
     garantirPessoa(s.user?.id);
     return { user: s.user };
   }
